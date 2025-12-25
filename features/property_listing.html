@@ -269,9 +269,13 @@
 
     function createPostCard(post) {
         const images = post.imageUrls && post.imageUrls.length > 0 ? post.imageUrls : ['https://via.placeholder.com/400x250'];
-        const userImg = post.userProfileImageUrl || 'https://ui-avatars.com/api/?name=Agent';
+        // Use objectID from Algolia for the link
+        const propertyId = post.objectID; 
+        
         return `
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group">
+        <div onclick="window.location.href='property_detail.html?id=${propertyId}'" 
+             class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group cursor-pointer hover:shadow-md transition-shadow">
+            
             <img src="${images[0]}" class="w-full h-48 object-cover">
             <div class="p-4 flex flex-col flex-1">
                 <div class="flex justify-between items-start mb-2">
@@ -290,7 +294,7 @@
     // Initial Load
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
-        searchPosts(); // Perform initial search on load
+        searchPosts();
     });
 </script>
 </body>
