@@ -143,6 +143,9 @@
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('property-content').classList.remove('hidden');
 
+            console.log("--- ALL DATA FIELDS ---", data);
+
+            document.getElementById('loading').classList.add('hidden');
             // --- 1. Basic Info ---
             document.getElementById('d-title').textContent = data.condominiumName || 'Untitled Property';
             document.getElementById('d-address').textContent = data.location || data.address || '';
