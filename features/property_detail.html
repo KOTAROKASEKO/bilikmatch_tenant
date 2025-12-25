@@ -7,14 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch.umd.js"></script>
     <style>
-        /* 横スクロール用のスタイル */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen pb-10">
@@ -51,9 +45,8 @@
                 <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
                     <div>
                         <h1 id="d-title" class="text-2xl font-bold text-gray-900 leading-tight"></h1>
-                        <p id="d-address" class="text-gray-500 mt-1 flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            <span id="d-location-text"></span>
+                        <p class="text-gray-500 mt-1 flex items-center gap-1">
+                            <span id="d-address"></span>
                         </p>
                     </div>
                     <div class="text-left md:text-right">
@@ -70,10 +63,7 @@
                 <hr class="border-gray-100 my-6">
 
                 <div class="bg-purple-50 rounded-xl p-5 border border-purple-100">
-                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        Initial Move-in Cost
-                    </h3>
+                    <h3 class="font-bold text-gray-800 mb-4">Initial Move-in Cost</h3>
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between">
                             <span class="text-gray-600">Advance Rental (1 mth)</span>
@@ -100,14 +90,22 @@
                 <h3 class="font-bold text-lg mb-3">Description</h3>
                 <p id="d-description" class="text-gray-700 leading-relaxed whitespace-pre-line"></p>
             </div>
-
         </div>
     </main>
 
     <script>
-        // --- Configuration ---
         const searchClient = algoliasearch('86BOLZBS9Q', '5da01cabd95ead996a8c0002b09c4b63');
         const index = searchClient.initIndex('bilik_match_index');
+
+        // Safe text setter helper
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value;
+            } else {
+                console.warn(`Element with ID '${id}' not found in HTML. Skipping.`);
+            }
+        }
 
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -116,89 +114,71 @@
 
         async function loadProperty() {
             const propertyId = getQueryParam('id');
-
-            if (!propertyId) {
-                showError("No property ID specified.");
-                return;
-            }
+            if (!propertyId) return showError("No property ID specified.");
 
             try {
-                // Fetch full object (not search)
                 const data = await index.getObject(propertyId);
+                console.log("Fetched Data:", data); // Debugging
                 renderProperty(data);
             } catch (err) {
                 console.error(err);
-                showError("Property not found or connection error.");
+                showError("Property not found.");
             }
         }
 
         function showError(msg) {
             document.getElementById('loading').classList.add('hidden');
-            const errEl = document.getElementById('error-message');
-            errEl.textContent = msg;
-            errEl.classList.remove('hidden');
+            document.getElementById('error-message').textContent = msg;
+            document.getElementById('error-message').classList.remove('hidden');
         }
 
         function renderProperty(data) {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('property-content').classList.remove('hidden');
 
-            console.log("--- ALL DATA FIELDS ---", data);
+            // --- 1. Basic Info (Using safe setter) ---
+            setText('d-title', data.condominiumName || 'Untitled');
+            setText('d-address', data.location || data.address || 'Unknown Location');
+            setText('d-rent', data.rent || '0');
+            setText('d-roomType', (data.roomType || 'Room') + ' Room');
+            setText('d-gender', (data.gender || 'Mix') + ' Unit');
+            setText('d-description', data.description || 'No description.');
 
-            document.getElementById('loading').classList.add('hidden');
-            // --- 1. Basic Info ---
-            document.getElementById('d-title').textContent = data.condominiumName || 'Untitled Property';
-            document.getElementById('d-address').textContent = data.location || data.address || '';
-            document.getElementById('d-location-text').textContent = data.location || data.address || 'Unknown Location';
-            document.getElementById('d-rent').textContent = data.rent || '0';
-            document.getElementById('d-roomType').textContent = (data.roomType || 'Room') + ' Room';
-            document.getElementById('d-gender').textContent = (data.gender || 'Mix') + ' Unit';
-            document.getElementById('d-description').textContent = data.description || 'No description available.';
-
-            // --- 2. Image Gallery (All Photos) ---
+            // --- 2. Image Gallery ---
             const gallery = document.getElementById('image-gallery');
-            gallery.innerHTML = '';
-            
-            // PostModel uses 'imageUrls', but fallback to 'images' just in case
-            const images = data.imageUrls || data.images || [];
-            
-            if (images.length > 0) {
-                images.forEach(imgUrl => {
-                    const imgContainer = document.createElement('div');
-                    imgContainer.className = "snap-center shrink-0 w-[85%] md:w-[60%] aspect-[4/3] rounded-xl overflow-hidden shadow-sm border border-gray-100";
-                    imgContainer.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover" alt="Property Image">`;
-                    gallery.appendChild(imgContainer);
-                });
-            } else {
-                // Fallback image
-                gallery.innerHTML = `
-                    <div class="w-full h-64 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400">
-                        No Images Available
-                    </div>`;
+            if (gallery) {
+                gallery.innerHTML = '';
+                const images = data.imageUrls || data.images || [];
+                if (images.length > 0) {
+                    images.forEach(imgUrl => {
+                        const div = document.createElement('div');
+                        div.className = "snap-center shrink-0 w-[85%] md:w-[60%] aspect-[4/3] rounded-xl overflow-hidden shadow-sm border border-gray-100";
+                        div.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover">`;
+                        gallery.appendChild(div);
+                    });
+                } else {
+                    gallery.innerHTML = `<div class="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500">No Images</div>`;
+                }
             }
 
-            // --- 3. Initial Cost Calculation (Matches Flutter Logic) ---
+            // --- 3. Initial Cost Calculation ---
             const rent = parseFloat(data.rent) || 0;
-            // Default values from PostModel.dart: securityDeposit = 2.0, utilityDeposit = 0.5
             const secDepRate = data.securityDeposit !== undefined ? parseFloat(data.securityDeposit) : 2.0;
             const utilDepRate = data.utilityDeposit !== undefined ? parseFloat(data.utilityDeposit) : 0.5;
 
-            const advanceRental = rent;
-            const securityDepositAmt = rent * secDepRate;
-            const utilityDepositAmt = rent * utilDepRate;
-            const total = advanceRental + securityDepositAmt + utilityDepositAmt;
+            const advance = rent;
+            const security = rent * secDepRate;
+            const utility = rent * utilDepRate;
+            const total = advance + security + utility;
 
-            // Update DOM
-            document.getElementById('label-security-dep').textContent = secDepRate;
-            document.getElementById('label-utility-dep').textContent = utilDepRate;
-            
-            document.getElementById('cost-advance').textContent = advanceRental.toFixed(0);
-            document.getElementById('cost-security').textContent = securityDepositAmt.toFixed(0);
-            document.getElementById('cost-utility').textContent = utilityDepositAmt.toFixed(0);
-            document.getElementById('cost-total').textContent = total.toFixed(0);
+            setText('label-security-dep', secDepRate);
+            setText('label-utility-dep', utilDepRate);
+            setText('cost-advance', advance.toFixed(0));
+            setText('cost-security', security.toFixed(0));
+            setText('cost-utility', utility.toFixed(0));
+            setText('cost-total', total.toFixed(0));
         }
 
-        // Initialize
         loadProperty();
     </script>
 </body>
