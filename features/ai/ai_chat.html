@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant | BilikMatch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        .message-enter { animation: slideInUp 0.3s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes slideInUp { to { opacity: 1; transform: translateY(0); } }
+        
+        .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col">
+
+    <header class="bg-white border-b border-gray-100 shadow-sm px-6 py-4 flex items-center justify-between shrink-0 z-10">
+        <div class="flex items-center gap-4">
+            <a href="../property_listing.html" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                <i class="fas fa-arrow-left text-gray-600"></i>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    AI Assistant <span class="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">Gemini Powered</span>
+                </h1>
+                <p class="text-xs text-gray-500">I can help you find your ideal room.</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 scroll-smooth" id="chat-messages">
+        <div class="flex items-start gap-3 message-enter">
+            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm">
+                <i class="fas fa-robot text-amber-600"></i>
+            </div>
+            <div class="bg-white p-4 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm max-w-[85%] md:max-w-lg">
+                <p class="text-sm text-gray-700 leading-relaxed">
+                    Hello! I'm powered by Google Gemini AI (via Cloud Functions). 🧠✨<br>
+                    Tell me your preferences naturally.<br>
+                    <span class="text-xs text-gray-400 mt-2 block pt-2 border-t border-gray-50">
+                        Try: "I need a cheap single room in Mont Kiara, budget around RM 800."
+                    </span>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-100 p-4 md:p-6 shrink-0">
+        <div class="max-w-4xl mx-auto relative">
+            <form id="chat-form" class="flex gap-3">
+                <input type="text" id="user-input" placeholder="Type your requirements here..." 
+                    class="flex-1 bg-gray-100 text-gray-900 text-sm rounded-full px-6 py-4 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all placeholder-gray-400">
+                
+                <button type="submit" class="w-14 h-14 rounded-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-200 flex items-center justify-center transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-paper-plane text-lg"></i>
+                </button>
+            </form>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        // Functions を呼び出すためのライブラリを追加
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+
+        // Firebase 設定
+        const firebaseConfig = {
+          apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
+          authDomain: "whatsappclone-5ad8f.firebaseapp.com",
+          projectId: "whatsappclone-5ad8f",
+          storageBucket: "whatsappclone-5ad8f.firebasestorage.app",
+          messagingSenderId: "1049878222012",
+          appId: "1:1049878222012:web:54584a8098728e70acecb9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const functions = getFunctions(app);
+        
+        // ★ サーバー側の関数 'chatWithGemini' を使う準備
+        const chatWithGemini = httpsCallable(functions, 'chatWithGemini');
+
+        // DOM要素
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('user-input');
+        const messagesContainer = document.getElementById('chat-messages');
+
+        // 送信イベント
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (!text) return;
+
+            // 1. ユーザーメッセージ表示
+            appendMessage('user', text);
+            input.value = '';
+            input.disabled = true;
+
+            // 2. タイピング表示
+            const typingId = showTyping();
+
+            try {
+                // ★ ここでサーバー（Cloud Function）を呼び出します
+                // APIキーはサーバー側にあるので、ここには書きません！
+                const result = await callCloudFunction(text);
+
+                removeTyping(typingId);
+                appendMessage('ai', result.message, result.filters);
+
+            } catch (error) {
+                console.error(error);
+                removeTyping(typingId);
+                appendMessage('ai', "Sorry, I encountered an error. Please try again.");
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
+        };
+
+        // --- Cloud Function Logic ---
+        async function callCloudFunction(userText) {
+            // プロンプトの組み立て
+            const prompt = `
+                You are a real estate search assistant for Malaysia.
+                Analyze the user's request and extract search filters.
+                Return ONLY a JSON object with this structure (no markdown):
+                {
+                    "message": "A friendly, short response summarizing what you understood.",
+                    "filters": {
+                        "gender": "Male" | "Female" | "Mix" (optional),
+                        "roomType": "Single" | "Middle" | "Master" (optional),
+                        "maxRent": number (optional),
+                        "q": "location or keywords" (optional)
+                    }
+                }
+                User Input: "${userText}"
+            `;
+
+            try {
+                // 安全な呼び出し
+                const result = await chatWithGemini({ text: prompt });
+                
+                // サーバーから返ってきた結果をパース
+                // result.data.response にAIの回答が入っています
+                const jsonStr = result.data.response.replace(/```json|```/g, '').trim();
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                console.error("Cloud Function Error:", e);
+                // エラー時はフォールバック（デモ用）
+                return { 
+                    message: "Server busy. Falling back to simple logic.", 
+                    filters: null 
+                }; 
+            }
+        }
+
+        // --- UI Helper Functions (変更なし) ---
+        function appendMessage(sender, text, filters = null) {
+            const div = document.createElement('div');
+            div.className = `flex items-start gap-3 message-enter ${sender === 'user' ? 'flex-row-reverse' : ''}`;
+            
+            const avatar = sender === 'user' 
+                ? `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0 border-2 border-white"><i class="fas fa-user text-gray-500"></i></div>`
+                : `<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm"><i class="fas fa-robot text-amber-600"></i></div>`;
+            
+            const bubbleStyle = sender === 'user' 
+                ? 'bg-[#673ab7] text-white rounded-tr-none shadow-md' 
+                : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none shadow-sm';
+
+            let contentHtml = `<p class="text-sm whitespace-pre-wrap leading-relaxed">${text}</p>`;
+            
+            if (filters && Object.keys(filters).length > 0) {
+                const params = new URLSearchParams(filters).toString();
+                contentHtml += `
+                    <div class="mt-4 pt-3 border-t border-gray-100/20">
+                        <a href="../property_listing.html?${params}" 
+                           class="block w-full text-center py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer no-underline">
+                            <i class="fas fa-search"></i> See Matching Rooms
+                        </a>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = `
+                ${avatar}
+                <div class="${bubbleStyle} p-4 rounded-2xl max-w-[85%] md:max-w-lg">
+                    ${contentHtml}
+                </div>
+            `;
+            
+            messagesContainer.appendChild(div);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTyping() {
+            const id = 'typing-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = "flex items-start gap-3 message-enter";
+            div.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 border-2 border-white shadow-sm"><i class="fas fa-robot text-amber-600"></i></div>
+                <div class="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex gap-1.5 items-center h-12">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                </div>
+            `;
+            messagesContainer.appendChild(div);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return id;
+        }
+
+        window.removeTyping = (id) => {
+            const el = document.getElementById(id);
+            if(el) el.remove();
+        }
+    </script>
+</body>
+</html>

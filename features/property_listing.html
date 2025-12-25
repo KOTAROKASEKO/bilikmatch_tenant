@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover Rooms | BilikMatch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #673ab7; /* Deep Purple */
+            --primary-50: #ede7f6;
+            --primary-100: #d1c4e9;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        .text-primary { color: var(--primary); }
+        .bg-primary { background-color: var(--primary); }
+        .bg-primary-50 { background-color: var(--primary-50); }
+        .border-primary { border-color: var(--primary); }
+
+        /* スクロールバー非表示 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* カルーセルのスナップ動作 */
+        .snap-x-mandatory { scroll-snap-type: x mandatory; }
+        .snap-center { scroll-snap-align: center; }
+
+        /* フィルターチップのスタイル */
+        .chip-radio:checked + label {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 relative">
+
+    <nav class="bg-primary text-white sticky top-0 z-40 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-search-location text-xl"></i>
+                <h1 class="text-lg font-bold tracking-wide">Discover</h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="openFilterModal()" class="lg:hidden p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <button id="auth-btn" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center gap-2 text-sm font-semibold backdrop-blur-sm border border-white/10">
+                    <i class="fas fa-user"></i> <span>Sign In</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="lg:hidden px-4 pb-4">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="mobile-search" placeholder="Search location, condo..." 
+                    class="w-full pl-10 pr-4 py-2.5 rounded-full text-gray-800 text-sm focus:outline-none shadow-sm"
+                    oninput="handleSearch(this.value)">
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-[1400px] mx-auto flex items-start pt-6 gap-6 px-4">
+        
+        <aside class="hidden lg:block w-80 shrink-0 sticky top-24 h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-gray-800 text-lg">Filters</h3>
+                    <button onclick="resetFilters()" class="text-xs font-bold text-primary hover:underline">Clear All</button>
+                </div>
+
+                <button onclick="window.location.href='ai/ai_chat.html'" class="w-full mb-6 py-3 px-4 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center gap-2 transition-colors font-bold text-sm border border-amber-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-rocket"></i> Go to AI Assistant
+                </button>
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-calendar-alt text-primary text-sm"></i>
+                        <span class="font-bold text-gray-700 text-sm">Availability</span>
+                    </div>
+                    <input type="date" id="filter-date" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary mb-2">
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-home text-primary text-sm"></i>
+                        <span class="font-bold text-gray-700 text-sm">Property Details</span>
+                    </div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Room Type</label>
+                    <div class="flex flex-wrap gap-2">
+                        <input type="radio" name="d-roomType" id="d-rt-any" value="any" class="hidden chip-radio" checked onchange="applyFilters()">
+                        <label for="d-rt-any" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 cursor-pointer bg-white hover:bg-gray-50 transition-colors">Any</label>
+
+                        <input type="radio" name="d-roomType" id="d-rt-single" value="Single" class="hidden chip-radio" onchange="applyFilters()">
+                        <label for="d-rt-single" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 cursor-pointer bg-white hover:bg-gray-50 transition-colors">Single</label>
+
+                        <input type="radio" name="d-roomType" id="d-rt-middle" value="Middle" class="hidden chip-radio" onchange="applyFilters()">
+                        <label for="d-rt-middle" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 cursor-pointer bg-white hover:bg-gray-50 transition-colors">Middle</label>
+                        
+                        <input type="radio" name="d-roomType" id="d-rt-master" value="Master" class="hidden chip-radio" onchange="applyFilters()">
+                        <label for="d-rt-master" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 cursor-pointer bg-white hover:bg-gray-50 transition-colors">Master</label>
+                    </div>
+
+                    <label class="text-[10px] font-bold text-gray-400 uppercase block mt-4 mb-2">Gender Preference</label>
+                    <div class="flex flex-wrap gap-2">
+                        <input type="radio" name="d-gender" id="d-g-any" value="any" class="hidden chip-radio" checked onchange="applyFilters()">
+                        <label for="d-g-any" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 cursor-pointer bg-white hover:bg-gray-50 transition-colors">Any</label>
+
+                        <input type="radio" name="d-gender" id="d-g-female" value="Female" class="hidden chip-radio" onchange="applyFilters()">
+                        <label for="d-g-female" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 cursor-pointer bg-white hover:bg-gray-50 transition-colors">Female</label>
+                        
+                        <input type="radio" name="d-gender" id="d-g-male" value="Male" class="hidden chip-radio" onchange="applyFilters()">
+                        <label for="d-g-male" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 cursor-pointer bg-white hover:bg-gray-50 transition-colors">Male</label>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-dollar-sign text-primary text-sm"></i>
+                        <span class="font-bold text-gray-700 text-sm">Rent Range (RM)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="d-min-rent" placeholder="Min" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none" onchange="applyFilters()">
+                        <span class="text-gray-400">-</span>
+                        <input type="number" id="d-max-rent" placeholder="Max" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none" onchange="applyFilters()">
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 min-w-0 pb-20">
+            <div class="hidden lg:block mb-6">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="desktop-search" placeholder="Search by location, condo name..." 
+                        class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-full text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm transition-all"
+                        oninput="handleSearch(this.value)">
+                </div>
+            </div>
+
+            <div id="loading-shimmer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+            <div id="empty-state" class="hidden py-20 text-center">
+                <div class="inline-block p-4 rounded-full bg-gray-100 mb-4">
+                    <i class="fas fa-home text-4xl text-gray-300"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-700">No properties found</h3>
+                <p class="text-gray-500 text-sm">Try adjusting your filters or search terms.</p>
+            </div>
+
+            <div id="property-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+            
+            <div id="load-more-trigger" class="py-8 text-center text-gray-400 text-sm hidden">
+                <span class="loading-text">End of results</span>
+            </div>
+        </div>
+    </main>
+
+    <div id="filter-modal" class="fixed inset-0 bg-gray-900/60 z-50 hidden flex justify-center items-end transition-opacity opacity-0">
+        <div id="filter-modal-content" class="bg-white w-full max-w-md rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+             <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Filters</h2>
+                <button onclick="closeFilterModal()" class="text-gray-500 hover:text-gray-800"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <button onclick="window.location.href='ai_chat.html'" class="w-full mb-6 py-3 bg-amber-50 text-amber-700 font-bold rounded-xl flex justify-center gap-2">
+                <i class="fas fa-rocket"></i> Go to AI Assistant
+            </button>
+
+            <p class="text-sm text-gray-500 text-center">Use the desktop view or AI Assistant for more filters in this demo.</p>
+        </div>
+    </div>
+
+<script type="module">
+    // 1. Import necessary libraries
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+    import algoliasearch from 'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.esm.browser.js';
+
+    // 2. Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
+      authDomain: "whatsappclone-5ad8f.firebaseapp.com",
+      projectId: "whatsappclone-5ad8f",
+      storageBucket: "whatsappclone-5ad8f.firebasestorage.app",
+      messagingSenderId: "1049878222012",
+      appId: "1:1049878222012:web:54584a8098728e70acecb9"
+    };
+
+    // 3. Initialize Firebase Services
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const functions = getFunctions(app); // Initialized correctly using 'app'
+    
+    // 4. Initialize Algolia (Credentials matching Flutter's PostService)
+    const algoliaClient = algoliasearch('86BOLZBS9Q', '5da01cabd95ead996a8c0002b09c4b63');
+    const index = algoliaClient.initIndex('bilik_match_index');
+    const getLatLng = httpsCallable(functions, 'geocode');
+
+    let allPosts = [];
+    let currentUser = null;
+
+    // --- Core Search Logic (Matching Flutter Logic) ---
+    async function searchPosts() {
+        const queryText = (document.getElementById('desktop-search').value || document.getElementById('mobile-search').value || "");
+        const gender = document.querySelector('input[name="d-gender"]:checked').value;
+        const roomType = document.querySelector('input[name="d-roomType"]:checked').value;
+        const minRent = parseInt(document.getElementById('d-min-rent').value) || 0;
+        const maxRent = parseInt(document.getElementById('d-max-rent').value) || 5000;
+
+        const filterStrings = [];
+        
+        if (minRent > 0) filterStrings.push(`rent >= ${minRent}`);
+        if (maxRent < 5000) filterStrings.push(`rent <= ${maxRent}`);
+        if (gender !== 'any') filterStrings.push(`gender:${gender}`);
+        if (roomType !== 'any') filterStrings.push(`roomType:${roomType}`);
+
+        let searchOptions = {
+            filters: filterStrings.length > 0 ? filterStrings.join(' AND ') : null,
+            hitsPerPage: 20,
+            aroundRadius: queryText.length === 0 ? 'all' : 20000, 
+            getRankingInfo: true,
+        };
+
+        console.log("--- Search Debug ---");
+        console.log("Query Text:", queryText);
+        console.log("Search Options:", searchOptions);
+        console.log("Active Filters:", filterStrings);
+        try {
+            const { hits } = await index.search(queryText, searchOptions);
+            renderGrid(hits);
+            
+            const empty = document.getElementById('empty-state');
+            if (hits.length === 0) empty.classList.remove('hidden');
+            else empty.classList.add('hidden');
+        } catch (err) {
+            console.error("Algolia search error:", err);
+        }
+    }
+    // --- UI Helpers & Global Exposure ---
+    window.applyFilters = searchPosts;
+    window.handleSearch = (val) => {
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(() => searchPosts(), 500); // Debounce search
+    };
+
+    window.resetFilters = () => {
+        document.getElementById('desktop-search').value = '';
+        document.getElementById('d-g-any').checked = true;
+        document.getElementById('d-rt-any').checked = true;
+        document.getElementById('d-min-rent').value = '';
+        document.getElementById('d-max-rent').value = '';
+        searchPosts();
+    };
+
+    function renderGrid(posts) {
+        const grid = document.getElementById('property-grid');
+        grid.innerHTML = posts.map(createPostCard).join('');
+    }
+
+    function createPostCard(post) {
+        const images = post.imageUrls && post.imageUrls.length > 0 ? post.imageUrls : ['https://via.placeholder.com/400x250'];
+        const userImg = post.userProfileImageUrl || 'https://ui-avatars.com/api/?name=Agent';
+        return `
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group">
+            <img src="${images[0]}" class="w-full h-48 object-cover">
+            <div class="p-4 flex flex-col flex-1">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-bold text-gray-900 line-clamp-1">${post.condominiumName || 'Untitled'}</h3>
+                    <span class="font-black text-primary">RM${post.rent}</span>
+                </div>
+                <p class="text-xs text-gray-500 mb-3"><i class="fas fa-map-marker-alt mr-1"></i>${post.location || 'Unknown'}</p>
+                <div class="flex gap-2 mb-4">
+                    <span class="px-2 py-1 rounded bg-gray-100 text-[10px] font-bold">${post.roomType || 'Room'}</span>
+                </div>
+            </div>
+
+        </div>`;
+    }
+
+    // Initial Load
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        searchPosts(); // Perform initial search on load
+    });
+</script>
+</body>
+</html>
