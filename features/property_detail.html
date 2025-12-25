@@ -5,70 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Property Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.14.2/dist/algoliasearch-lite.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch.umd.js"></script>
+    <style>
+        /* 横スクロール用のスタイル */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen pb-10">
 
-    <nav class="bg-white shadow-sm p-4">
+    <nav class="bg-white shadow-sm p-4 sticky top-0 z-50">
         <div class="max-w-4xl mx-auto flex items-center">
-            <a href="property_listing.html" class="text-blue-600 hover:text-blue-800 flex items-center gap-2">
+            <a href="property_listing.html" class="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-semibold">
                 &larr; Back to Listings
             </a>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto p-4 mt-6">
+    <main class="max-w-4xl mx-auto p-4 mt-2">
         
         <div id="loading" class="text-center py-20">
-            <p class="text-gray-500">Loading property details...</p>
+            <p class="text-gray-500 animate-pulse">Loading property details...</p>
         </div>
 
-        <div id="error-message" class="hidden text-center py-20 text-red-500">
+        <div id="error-message" class="hidden text-center py-20 text-red-500 font-bold">
             Property not found.
         </div>
 
-        <div id="property-content" class="hidden bg-white rounded-xl shadow p-6">
-            <div class="mb-6">
-                <img id="d-image" src="" alt="Property" class="w-full h-64 object-cover rounded-lg bg-gray-200">
-            </div>
-
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h1 id="d-title" class="text-2xl font-bold text-gray-900"></h1>
-                    <p id="d-address" class="text-gray-600 mt-1"></p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xl font-bold text-blue-600">RM <span id="d-rent"></span></p>
-                    <p class="text-sm text-gray-500">/month</p>
+        <div id="property-content" class="hidden space-y-6">
+            
+            <div class="relative group">
+                <div id="image-gallery" class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide">
+                    </div>
+                <div class="absolute right-2 bottom-6 bg-black/50 text-white text-xs px-2 py-1 rounded-full pointer-events-none">
+                    Scroll for more &rarr;
                 </div>
             </div>
 
-            <hr class="my-4">
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="p-3 bg-gray-50 rounded-lg">
-                    <p class="text-xs text-gray-500">Room Type</p>
-                    <p id="d-roomType" class="font-semibold text-gray-800 capitalize"></p>
+            <div class="bg-white rounded-2xl shadow-sm p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
+                    <div>
+                        <h1 id="d-title" class="text-2xl font-bold text-gray-900 leading-tight"></h1>
+                        <p id="d-address" class="text-gray-500 mt-1 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span id="d-location-text"></span>
+                        </p>
+                    </div>
+                    <div class="text-left md:text-right">
+                        <p class="text-3xl font-black text-purple-700">RM <span id="d-rent"></span></p>
+                        <p class="text-sm text-gray-500">per month</p>
+                    </div>
                 </div>
-                <div class="p-3 bg-gray-50 rounded-lg">
-                    <p class="text-xs text-gray-500">Gender</p>
-                    <p id="d-gender" class="font-semibold text-gray-800 capitalize"></p>
+
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span id="d-roomType" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-semibold border border-purple-100"></span>
+                    <span id="d-gender" class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold border border-blue-100"></span>
+                </div>
+
+                <hr class="border-gray-100 my-6">
+
+                <div class="bg-purple-50 rounded-xl p-5 border border-purple-100">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Initial Move-in Cost
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Advance Rental (1 mth)</span>
+                            <span class="font-semibold text-gray-900">RM <span id="cost-advance">0</span></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Security Deposit (<span id="label-security-dep">2.0</span> mths)</span>
+                            <span class="font-semibold text-gray-900">RM <span id="cost-security">0</span></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Utility Deposit (<span id="label-utility-dep">0.5</span> mths)</span>
+                            <span class="font-semibold text-gray-900">RM <span id="cost-utility">0</span></span>
+                        </div>
+                        <div class="h-px bg-purple-200 my-2"></div>
+                        <div class="flex justify-between text-base">
+                            <span class="font-bold text-purple-900">Total Move-in Cost</span>
+                            <span class="font-black text-purple-700">RM <span id="cost-total">0</span></span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div>
-                <h3 class="font-bold text-lg mb-2">Description</h3>
+            <div class="bg-white rounded-2xl shadow-sm p-6">
+                <h3 class="font-bold text-lg mb-3">Description</h3>
                 <p id="d-description" class="text-gray-700 leading-relaxed whitespace-pre-line"></p>
             </div>
+
         </div>
     </main>
 
     <script>
-        // 1. Algolia設定 (Listingページと同じキーを使ってください)
-        const searchClient = algoliasearch('YOUR_APP_ID', 'YOUR_SEARCH_API_KEY');
-        const index = searchClient.initIndex('posts'); // インデックス名を確認
+        // --- Configuration ---
+        const searchClient = algoliasearch('86BOLZBS9Q', '5da01cabd95ead996a8c0002b09c4b63');
+        const index = searchClient.initIndex('bilik_match_index');
 
-        // 2. URLからIDを取得する関数
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
@@ -78,42 +118,84 @@
             const propertyId = getQueryParam('id');
 
             if (!propertyId) {
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('error-message').textContent = "No property ID specified.";
-                document.getElementById('error-message').classList.remove('hidden');
+                showError("No property ID specified.");
                 return;
             }
 
             try {
-                // 3. AlgoliaからIDで1件だけ取得
+                // Fetch full object (not search)
                 const data = await index.getObject(propertyId);
                 renderProperty(data);
             } catch (err) {
                 console.error(err);
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('error-message').classList.remove('hidden');
+                showError("Property not found or connection error.");
             }
         }
 
-        // 4. 画面に表示
+        function showError(msg) {
+            document.getElementById('loading').classList.add('hidden');
+            const errEl = document.getElementById('error-message');
+            errEl.textContent = msg;
+            errEl.classList.remove('hidden');
+        }
+
         function renderProperty(data) {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('property-content').classList.remove('hidden');
 
-            // データの注入
-            document.getElementById('d-title').textContent = data.condominiumName || 'No Name';
-            document.getElementById('d-address').textContent = data.address || '';
+            // --- 1. Basic Info ---
+            document.getElementById('d-title').textContent = data.condominiumName || 'Untitled Property';
+            document.getElementById('d-address').textContent = data.location || data.address || '';
+            document.getElementById('d-location-text').textContent = data.location || data.address || 'Unknown Location';
             document.getElementById('d-rent').textContent = data.rent || '0';
-            document.getElementById('d-roomType').textContent = data.roomType || '-';
-            document.getElementById('d-gender').textContent = data.gender || '-';
+            document.getElementById('d-roomType').textContent = (data.roomType || 'Room') + ' Room';
+            document.getElementById('d-gender').textContent = (data.gender || 'Mix') + ' Unit';
             document.getElementById('d-description').textContent = data.description || 'No description available.';
+
+            // --- 2. Image Gallery (All Photos) ---
+            const gallery = document.getElementById('image-gallery');
+            gallery.innerHTML = '';
             
-            if (data.images && data.images.length > 0) {
-                document.getElementById('d-image').src = data.images[0];
+            // PostModel uses 'imageUrls', but fallback to 'images' just in case
+            const images = data.imageUrls || data.images || [];
+            
+            if (images.length > 0) {
+                images.forEach(imgUrl => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = "snap-center shrink-0 w-[85%] md:w-[60%] aspect-[4/3] rounded-xl overflow-hidden shadow-sm border border-gray-100";
+                    imgContainer.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover" alt="Property Image">`;
+                    gallery.appendChild(imgContainer);
+                });
+            } else {
+                // Fallback image
+                gallery.innerHTML = `
+                    <div class="w-full h-64 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400">
+                        No Images Available
+                    </div>`;
             }
+
+            // --- 3. Initial Cost Calculation (Matches Flutter Logic) ---
+            const rent = parseFloat(data.rent) || 0;
+            // Default values from PostModel.dart: securityDeposit = 2.0, utilityDeposit = 0.5
+            const secDepRate = data.securityDeposit !== undefined ? parseFloat(data.securityDeposit) : 2.0;
+            const utilDepRate = data.utilityDeposit !== undefined ? parseFloat(data.utilityDeposit) : 0.5;
+
+            const advanceRental = rent;
+            const securityDepositAmt = rent * secDepRate;
+            const utilityDepositAmt = rent * utilDepRate;
+            const total = advanceRental + securityDepositAmt + utilityDepositAmt;
+
+            // Update DOM
+            document.getElementById('label-security-dep').textContent = secDepRate;
+            document.getElementById('label-utility-dep').textContent = utilDepRate;
+            
+            document.getElementById('cost-advance').textContent = advanceRental.toFixed(0);
+            document.getElementById('cost-security').textContent = securityDepositAmt.toFixed(0);
+            document.getElementById('cost-utility').textContent = utilityDepositAmt.toFixed(0);
+            document.getElementById('cost-total').textContent = total.toFixed(0);
         }
 
-        // 実行
+        // Initialize
         loadProperty();
     </script>
 </body>
