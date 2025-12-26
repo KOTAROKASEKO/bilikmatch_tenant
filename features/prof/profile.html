@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Property Match</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #673ab7;
+            --bg-color: #f8f9fa;
+            --text-color: #212121;
+            --gray-text: #757575;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding-bottom: 40px;
+        }
+
+        /* AppBar simulation */
+        .app-bar {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .app-bar h2 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Profile Header */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            background-color: #e1bee7; /* Light Purple */
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            background-image: url('https://via.placeholder.com/150'); /* Replace with user image */
+            background-size: cover;
+        }
+        .profile-name { font-size: 22px; font-weight: bold; margin: 0; }
+        .profile-email { color: var(--gray-text); font-size: 16px; margin: 4px 0 16px 0; }
+
+        .btn-edit {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Info Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px 8px 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 20px;
+        }
+        .list-item:not(:last-child) {
+            /* border-bottom: 1px solid #eee; Optional separator */
+        }
+        .list-icon {
+            color: var(--gray-text);
+            margin-right: 16px;
+            font-size: 20px;
+            margin-top: 2px;
+        }
+        .list-content { flex: 1; }
+        .list-label { font-size: 13px; color: var(--gray-text); display: block; margin-bottom: 2px;}
+        .list-value { font-size: 15px; font-weight: 600; color: var(--text-color); }
+
+        .menu-item {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .menu-item:hover { background-color: #f9f9f9; }
+        .menu-title { font-weight: 500; display: flex; align-items: center; gap: 12px; }
+
+        .btn-logout {
+            width: 100%;
+            padding: 12px;
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .btn-logout:hover { background-color: #ffcdd2; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-bar">
+        <h2><span class="material-icons">person</span> My Profile</h2>
+    </div>
+
+    <div class="container">
+        
+        <div class="profile-header">
+            <div class="avatar"></div> <h1 class="profile-name">John Doe</h1>
+            <p class="profile-email">john.doe@example.com</p>
+            <button class="btn-edit" onclick="alert('Navigate to Edit Profile')">
+                <span class="material-icons" style="font-size: 18px;">edit</span> Edit Profile
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="menu-item" onclick="alert('Go to Saved Listings')">
+                <div class="menu-title">
+                    <span class="material-icons" style="color: var(--primary-color);">bookmark_border</span>
+                    Saved Listings
+                </div>
+                <span class="material-icons" style="color: #ccc; font-size: 16px;">arrow_forward_ios</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">PERSONAL INFO</div>
+            
+            <div class="list-item">
+                <span class="material-icons list-icon">cake</span>
+                <div class="list-content">
+                    <span class="list-label">Age</span>
+                    <span class="list-value">28 years old</span>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <span class="material-icons list-icon">person_outline</span>
+                <div class="list-content">
+                    <span class="list-label">Gender</span>
+                    <span class="list-value">Male</span>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <span class="material-icons list-icon">work_outline</span>
+                <div class="list-content">
+                    <span class="list-label">Occupation</span>
+                    <span class="list-value">Software Engineer</span>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <span class="material-icons list-icon">location_city</span>
+                <div class="list-content">
+                    <span class="list-label">Work Location</span>
+                    <span class="list-value">Kuala Lumpur</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">PREFERENCES</div>
+
+            <div class="list-item">
+                <span class="material-icons list-icon">calendar_today</span>
+                <div class="list-content">
+                    <span class="list-label">Move-in Date</span>
+                    <span class="list-value">Oct 15, 2023</span>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <span class="material-icons list-icon">account_balance_wallet</span>
+                <div class="list-content">
+                    <span class="list-label">Budget</span>
+                    <span class="list-value">RM 1500 / month</span>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <span class="material-icons list-icon">bed</span>
+                <div class="list-content">
+                    <span class="list-label">Room Preference</span>
+                    <span class="list-value">Master Room</span>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <span class="material-icons list-icon">pets</span>
+                <div class="list-content">
+                    <span class="list-label">Pets</span>
+                    <span class="list-value">No</span>
+                </div>
+            </div>
+            
+            <div style="padding: 16px;">
+                <button class="btn-logout" onclick="alert('Show Sign Out Modal')">
+                    <span class="material-icons">logout</span> Log Out
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

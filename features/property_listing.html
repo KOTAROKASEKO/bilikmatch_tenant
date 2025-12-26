@@ -16,22 +16,24 @@
             --primary-100: #d1c4e9;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            padding-bottom: 4rem; /* For mobile nav */
+        }
         
+        @media (min-width: 1024px) {
+            body { padding-bottom: 0; }
+        }
+
         .text-primary { color: var(--primary); }
         .bg-primary { background-color: var(--primary); }
         .bg-primary-50 { background-color: var(--primary-50); }
         .border-primary { border-color: var(--primary); }
-
-        /* スクロールバー非表示 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* カルーセルのスナップ動作 */
         .snap-x-mandatory { scroll-snap-type: x mandatory; }
         .snap-center { scroll-snap-align: center; }
-
-        /* フィルターチップのスタイル */
         .chip-radio:checked + label {
             background-color: var(--primary);
             color: white;
@@ -43,17 +45,25 @@
 
     <nav class="bg-primary text-white sticky top-0 z-40 shadow-md">
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            
             <div class="flex items-center gap-3">
                 <i class="fas fa-search-location text-xl"></i>
-                <h1 class="text-lg font-bold tracking-wide">Discover</h1>
+                <h1 class="text-lg font-bold tracking-wide">BilikMatch</h1>
             </div>
             
+            <div class="hidden lg:flex items-center gap-8">
+                <a href="chat.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Chat</a>
+                <a href="property_listing.html" class="text-white font-bold text-sm border-b-2 border-white pb-1">Discover</a>
+                <a href="profile.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Profile</a>
+            </div>
+
             <div class="flex items-center gap-4">
                 <button onclick="openFilterModal()" class="lg:hidden p-2 hover:bg-white/10 rounded-full transition-colors">
                     <i class="fas fa-filter"></i>
                 </button>
-                <button id="auth-btn" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center gap-2 text-sm font-semibold backdrop-blur-sm border border-white/10">
-                    <i class="fas fa-user"></i> <span>Sign In</span>
+                
+                <button id="auth-btn" onclick="handleAuthClick()" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center gap-2 text-sm font-semibold backdrop-blur-sm border border-white/10">
+                    <i class="fas fa-user"></i> <span id="auth-btn-text">Sign In</span>
                 </button>
             </div>
         </div>
@@ -80,6 +90,7 @@
                 <button onclick="window.location.href='ai/ai_chat.html'" class="w-full mb-6 py-3 px-4 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center gap-2 transition-colors font-bold text-sm border border-amber-200 shadow-sm hover:shadow-md">
                     <i class="fas fa-rocket"></i> Go to AI Assistant
                 </button>
+                
                 <div class="mb-6">
                     <div class="flex items-center gap-2 mb-3">
                         <i class="fas fa-calendar-alt text-primary text-sm"></i>
@@ -93,6 +104,7 @@
                         <i class="fas fa-home text-primary text-sm"></i>
                         <span class="font-bold text-gray-700 text-sm">Property Details</span>
                     </div>
+                    
                     <label class="text-[10px] font-bold text-gray-400 uppercase block mb-2">Room Type</label>
                     <div class="flex flex-wrap gap-2">
                         <input type="radio" name="d-roomType" id="d-rt-any" value="any" class="hidden chip-radio" checked onchange="applyFilters()">
@@ -155,12 +167,28 @@
             </div>
 
             <div id="property-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
-            
             <div id="load-more-trigger" class="py-8 text-center text-gray-400 text-sm hidden">
                 <span class="loading-text">End of results</span>
             </div>
         </div>
     </main>
+
+    <nav class="lg:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <div class="flex justify-around items-center h-16">
+            <a href="chat.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary transition-colors">
+                <i class="far fa-comment-dots text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Chat</span>
+            </a>
+            <a href="property_listing.html" class="flex flex-col items-center justify-center w-full h-full text-primary">
+                <i class="fas fa-search-location text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Discover</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary transition-colors">
+                <i class="far fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Profile</span>
+            </a>
+        </div>
+    </nav>
 
     <div id="filter-modal" class="fixed inset-0 bg-gray-900/60 z-50 hidden flex justify-center items-end transition-opacity opacity-0">
         <div id="filter-modal-content" class="bg-white w-full max-w-md rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto">
@@ -168,24 +196,21 @@
                 <h2 class="text-xl font-bold">Filters</h2>
                 <button onclick="closeFilterModal()" class="text-gray-500 hover:text-gray-800"><i class="fas fa-times"></i></button>
             </div>
-            
             <button onclick="window.location.href='ai_chat.html'" class="w-full mb-6 py-3 bg-amber-50 text-amber-700 font-bold rounded-xl flex justify-center gap-2">
                 <i class="fas fa-rocket"></i> Go to AI Assistant
             </button>
-
-            <p class="text-sm text-gray-500 text-center">Use the desktop view or AI Assistant for more filters in this demo.</p>
+            <p class="text-sm text-gray-500 text-center">Use desktop view for more filters.</p>
         </div>
     </div>
 
 <script type="module">
-    // 1. Import necessary libraries
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
     import algoliasearch from 'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.esm.browser.js';
 
-    // 2. Firebase Configuration
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
       authDomain: "whatsappclone-5ad8f.firebaseapp.com",
@@ -195,13 +220,12 @@
       appId: "1:1049878222012:web:54584a8098728e70acecb9"
     };
 
-    // 3. Initialize Firebase Services
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const functions = getFunctions(app); // Initialized correctly using 'app'
+    const functions = getFunctions(app);
     
-    // 4. Initialize Algolia (Credentials matching Flutter's PostService)
+    // Algolia Config
     const algoliaClient = algoliasearch('86BOLZBS9Q', '5da01cabd95ead996a8c0002b09c4b63');
     const index = algoliaClient.initIndex('bilik_match_index');
     const getLatLng = httpsCallable(functions, 'geocode');
@@ -209,7 +233,7 @@
     let allPosts = [];
     let currentUser = null;
 
-    // --- Core Search Logic (Matching Flutter Logic) ---
+    // --- Search Logic ---
     async function searchPosts() {
         const queryText = (document.getElementById('desktop-search').value || document.getElementById('mobile-search').value || "");
         const gender = document.querySelector('input[name="d-gender"]:checked').value;
@@ -218,27 +242,29 @@
         const maxRent = parseInt(document.getElementById('d-max-rent').value) || 5000;
 
         const filterStrings = [];
-        
         if (minRent > 0) filterStrings.push(`rent >= ${minRent}`);
         if (maxRent < 5000) filterStrings.push(`rent <= ${maxRent}`);
         if (gender !== 'any') filterStrings.push(`gender:${gender}`);
         if (roomType !== 'any') filterStrings.push(`roomType:${roomType}`);
 
+        const KLCC_COORDS = '3.1579, 101.7116'; 
+
         let searchOptions = {
-            filters: filterStrings.length > 0 ? filterStrings.join(' AND ') : null,
+            filters: filterStrings.length > 0 ? filterStrings.join(' AND ') : '',
             hitsPerPage: 20,
-            aroundRadius: queryText.length === 0 ? 'all' : 20000, 
             getRankingInfo: true,
         };
 
-        console.log("--- Search Debug ---");
-        console.log("Query Text:", queryText);
-        console.log("Search Options:", searchOptions);
-        console.log("Active Filters:", filterStrings);
+        if (queryText.length === 0) {
+            searchOptions.aroundLatLng = KLCC_COORDS;
+            searchOptions.aroundRadius = 'all';
+        } else {
+            searchOptions.aroundRadius = 20000; 
+        }
+
         try {
             const { hits } = await index.search(queryText, searchOptions);
             renderGrid(hits);
-            
             const empty = document.getElementById('empty-state');
             if (hits.length === 0) empty.classList.remove('hidden');
             else empty.classList.add('hidden');
@@ -246,11 +272,12 @@
             console.error("Algolia search error:", err);
         }
     }
-    // --- UI Helpers & Global Exposure ---
+
+    // --- UI Global Functions ---
     window.applyFilters = searchPosts;
     window.handleSearch = (val) => {
         clearTimeout(window.searchTimeout);
-        window.searchTimeout = setTimeout(() => searchPosts(), 500); // Debounce search
+        window.searchTimeout = setTimeout(() => searchPosts(), 500); 
     };
 
     window.resetFilters = () => {
@@ -262,6 +289,37 @@
         searchPosts();
     };
 
+    // --- ★ NEW AUTH HANDLING LOGIC ★ ---
+    window.handleAuthClick = () => {
+        if (currentUser) {
+            // If logged in -> Go to Profile
+            window.location.href = 'profile.html';
+        } else {
+            // If logged out -> Go to Sign In
+            window.location.href = 'signin/sign_in.html';
+        }
+    };
+
+    window.openFilterModal = () => {
+        const modal = document.getElementById('filter-modal');
+        const content = document.getElementById('filter-modal-content');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('translate-y-full');
+        }, 10);
+    };
+
+    window.closeFilterModal = () => {
+        const modal = document.getElementById('filter-modal');
+        const content = document.getElementById('filter-modal-content');
+        modal.classList.add('opacity-0');
+        content.classList.add('translate-y-full');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    };
+
     function renderGrid(posts) {
         const grid = document.getElementById('property-grid');
         grid.innerHTML = posts.map(createPostCard).join('');
@@ -269,13 +327,10 @@
 
     function createPostCard(post) {
         const images = post.imageUrls && post.imageUrls.length > 0 ? post.imageUrls : ['https://via.placeholder.com/400x250'];
-        // Use objectID from Algolia for the link
         const propertyId = post.objectID; 
-        
         return `
         <div onclick="window.location.href='property_detail.html?id=${propertyId}'" 
              class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group cursor-pointer hover:shadow-md transition-shadow">
-            
             <img src="${images[0]}" class="w-full h-48 object-cover">
             <div class="p-4 flex flex-col flex-1">
                 <div class="flex justify-between items-start mb-2">
@@ -287,14 +342,21 @@
                     <span class="px-2 py-1 rounded bg-gray-100 text-[10px] font-bold">${post.roomType || 'Room'}</span>
                 </div>
             </div>
-
         </div>`;
     }
 
-    // Initial Load
+    searchPosts();
+
+    // --- Auth Listener ---
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
-        searchPosts();
+        const authBtnText = document.getElementById('auth-btn-text');
+        
+        if (user) {
+            authBtnText.innerText = "My Profile";
+        } else {
+            authBtnText.innerText = "Sign In"; // Ensure it stays/reverts to 'Sign In'
+        }
     });
 </script>
 </body>

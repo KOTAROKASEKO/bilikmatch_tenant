@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - reConver</title>
+    <style>
+        /* --- CSS Styles --- */
+        :root {
+            --primary-color: #673AB7; /* Deep Purple */
+            --primary-light: #9575CD;
+            --bg-color: #f5f5f5;
+            --white: #ffffff;
+            --text-color: #333;
+            --error-color: #d32f2f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: var(--white);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box; /* Ensures padding doesn't widen element */
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #512DA8;
+        }
+
+        .btn-google {
+            background-color: var(--white);
+            color: #757575;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-google:hover {
+            background-color: #f1f1f1;
+        }
+
+        .btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #999;
+        }
+
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .divider span {
+            padding: 0 10px;
+            font-size: 14px;
+        }
+
+        .links {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .links a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Error Message Styling */
+        #error-message {
+            color: var(--error-color);
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none; /* Hidden by default */
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-header">
+        <h1>Welcome Back!</h1>
+        <p>Sign in to continue to reConver</p>
+    </div>
+
+    <div id="error-message"></div>
+
+    <form id="login-form">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="name@example.com" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="sign-in-btn">Sign In</button>
+    </form>
+
+    <div class="divider">
+        <span>OR</span>
+    </div>
+
+    <button class="btn btn-google" id="google-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
+        Sign in with Google
+    </button>
+
+    <div class="links">
+        <p>Don't have an account? <a href="../register/register.html">Register Now</a></p>
+        <p><a href="#">Forgot Password?</a></p>
+    </div>
+</div>
+
+<script type="module">
+    // 1. Import Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        GoogleAuthProvider, 
+        signInWithPopup 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // 2. Your Web App's Firebase Configuration
+    // (Extracted from your firebase_options.dart)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
+        authDomain: "whatsappclone-5ad8f.firebaseapp.com",
+        projectId: "whatsappclone-5ad8f",
+        storageBucket: "whatsappclone-5ad8f.firebasestorage.app",
+        messagingSenderId: "1049878222012",
+        appId: "1:1049878222012:web:54584a8098728e70acecb9",
+        measurementId: "G-EQ99QMVB2Y"
+    };
+
+    // 3. Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // 4. DOM Elements
+    const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const googleBtn = document.getElementById('google-btn');
+    const errorDiv = document.getElementById('error-message');
+    const signInBtn = document.getElementById('sign-in-btn');
+
+    // Helper: Show Error
+    function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        // Hide error after 5 seconds
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // Helper: Handle Success Redirect
+    function handleSuccess(user) {
+        console.log("User signed in:", user.email);
+        // Redirect to the property listing page (adjust path if needed)
+        window.location.href = '../property_listing.html';
+    }
+
+    // 5. Email/Password Sign In Logic
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevent page reload
+        
+        const email = emailInput.value;
+        const password = passwordInput.value;
+
+        // UI Loading State
+        signInBtn.disabled = true;
+        signInBtn.textContent = "Signing In...";
+        errorDiv.style.display = 'none';
+
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            handleSuccess(userCredential.user);
+        } catch (error) {
+            console.error("Error signing in:", error);
+            let msg = "Failed to sign in. Please check your credentials.";
+            if (error.code === 'auth/invalid-credential') {
+                msg = "Invalid email or password.";
+            } else if (error.code === 'auth/user-not-found') {
+                msg = "No user found with this email.";
+            } else if (error.code === 'auth/wrong-password') {
+                msg = "Incorrect password.";
+            }
+            showError(msg);
+            
+            // Reset Button
+            signInBtn.disabled = false;
+            signInBtn.textContent = "Sign In";
+        }
+    });
+
+    // 6. Google Sign In Logic
+    googleBtn.addEventListener('click', async () => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            handleSuccess(result.user);
+        } catch (error) {
+            console.error("Google Sign-In Error:", error);
+            showError("Google Sign-In failed. Please try again.");
+        }
+    });
+
+</script>
+
+</body>
+</html>
