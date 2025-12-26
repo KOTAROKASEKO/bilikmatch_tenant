@@ -54,7 +54,7 @@
             <div class="hidden lg:flex items-center gap-8">
                 <a href="chat.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Chat</a>
                 <a href="property_listing.html" class="text-white font-bold text-sm border-b-2 border-white pb-1">Discover</a>
-                <a href="profile.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Profile</a>
+                <a href="prof/profile.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Profile</a>
             </div>
 
             <div class="flex items-center gap-4">
@@ -183,7 +183,7 @@
                 <i class="fas fa-search-location text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">Discover</span>
             </a>
-            <a href="profile.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary transition-colors">
+            <a href="prof/profile.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary transition-colors">
                 <i class="far fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">Profile</span>
             </a>
@@ -293,7 +293,7 @@
     window.handleAuthClick = () => {
         if (currentUser) {
             // If logged in -> Go to Profile
-            window.location.href = 'profile.html';
+            window.location.href = 'prof/profile.html';
         } else {
             // If logged out -> Go to Sign In
             window.location.href = 'signin/sign_in.html';

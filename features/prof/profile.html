@@ -3,244 +3,613 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - Property Match</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>My Profile | BilikMatch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         :root {
-            --primary-color: #673ab7;
-            --bg-color: #f8f9fa;
-            --text-color: #212121;
-            --gray-text: #757575;
+            --primary: #673ab7; /* Colors.deepPurple */
+            --primary-50: #ede7f6;
+            --primary-100: #d1c4e9;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding-bottom: 40px;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            padding-bottom: 5rem; /* Space for mobile nav */
         }
 
-        /* AppBar simulation */
-        .app-bar {
-            background-color: var(--primary-color);
+        @media (min-width: 1024px) {
+            body { padding-bottom: 0; }
+        }
+
+        .bg-primary { background-color: var(--primary); }
+        .text-primary { color: var(--primary); }
+        .btn-primary {
+            background-color: var(--primary);
             color: white;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s;
         }
-        .app-bar h2 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .btn-primary:hover { background-color: #5e35b1; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
+        /* Modal Transitions */
+        .modal { transition: opacity 0.3s ease-in-out, visibility 0.3s; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .modal.hidden .modal-content { transform: translateY(100%); }
+        @media (min-width: 768px) {
+            .modal.hidden .modal-content { transform: scale(0.95); opacity: 0; }
         }
-
-        /* Profile Header */
-        .profile-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .avatar {
-            width: 100px;
-            height: 100px;
-            background-color: #e1bee7; /* Light Purple */
-            border-radius: 50%;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
-            color: var(--primary-color);
-            margin-bottom: 16px;
-            background-image: url('https://via.placeholder.com/150'); /* Replace with user image */
-            background-size: cover;
-        }
-        .profile-name { font-size: 22px; font-weight: bold; margin: 0; }
-        .profile-email { color: var(--gray-text); font-size: 16px; margin: 4px 0 16px 0; }
-
-        .btn-edit {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Info Cards */
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 16px 20px 8px 20px;
-            font-weight: bold;
-            color: var(--primary-color);
-            font-size: 16px;
-        }
-
-        .list-item {
-            display: flex;
-            align-items: flex-start;
-            padding: 12px 20px;
-        }
-        .list-item:not(:last-child) {
-            /* border-bottom: 1px solid #eee; Optional separator */
-        }
-        .list-icon {
-            color: var(--gray-text);
-            margin-right: 16px;
-            font-size: 20px;
-            margin-top: 2px;
-        }
-        .list-content { flex: 1; }
-        .list-label { font-size: 13px; color: var(--gray-text); display: block; margin-bottom: 2px;}
-        .list-value { font-size: 15px; font-weight: 600; color: var(--text-color); }
-
-        .menu-item {
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-        .menu-item:hover { background-color: #f9f9f9; }
-        .menu-title { font-weight: 500; display: flex; align-items: center; gap: 12px; }
-
-        .btn-logout {
-            width: 100%;
-            padding: 12px;
-            background-color: #ffebee;
-            color: #d32f2f;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .btn-logout:hover { background-color: #ffcdd2; }
-
     </style>
 </head>
-<body>
+<body class="min-h-screen text-gray-800">
 
-    <div class="app-bar">
-        <h2><span class="material-icons">person</span> My Profile</h2>
-    </div>
-
-    <div class="container">
-        
-        <div class="profile-header">
-            <div class="avatar"></div> <h1 class="profile-name">John Doe</h1>
-            <p class="profile-email">john.doe@example.com</p>
-            <button class="btn-edit" onclick="alert('Navigate to Edit Profile')">
-                <span class="material-icons" style="font-size: 18px;">edit</span> Edit Profile
-            </button>
-        </div>
-
-        <div class="card">
-            <div class="menu-item" onclick="alert('Go to Saved Listings')">
-                <div class="menu-title">
-                    <span class="material-icons" style="color: var(--primary-color);">bookmark_border</span>
-                    Saved Listings
-                </div>
-                <span class="material-icons" style="color: #ccc; font-size: 16px;">arrow_forward_ios</span>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">PERSONAL INFO</div>
-            
-            <div class="list-item">
-                <span class="material-icons list-icon">cake</span>
-                <div class="list-content">
-                    <span class="list-label">Age</span>
-                    <span class="list-value">28 years old</span>
-                </div>
-            </div>
-
-            <div class="list-item">
-                <span class="material-icons list-icon">person_outline</span>
-                <div class="list-content">
-                    <span class="list-label">Gender</span>
-                    <span class="list-value">Male</span>
-                </div>
-            </div>
-
-            <div class="list-item">
-                <span class="material-icons list-icon">work_outline</span>
-                <div class="list-content">
-                    <span class="list-label">Occupation</span>
-                    <span class="list-value">Software Engineer</span>
-                </div>
-            </div>
-
-            <div class="list-item">
-                <span class="material-icons list-icon">location_city</span>
-                <div class="list-content">
-                    <span class="list-label">Work Location</span>
-                    <span class="list-value">Kuala Lumpur</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">PREFERENCES</div>
-
-            <div class="list-item">
-                <span class="material-icons list-icon">calendar_today</span>
-                <div class="list-content">
-                    <span class="list-label">Move-in Date</span>
-                    <span class="list-value">Oct 15, 2023</span>
-                </div>
-            </div>
-
-            <div class="list-item">
-                <span class="material-icons list-icon">account_balance_wallet</span>
-                <div class="list-content">
-                    <span class="list-label">Budget</span>
-                    <span class="list-value">RM 1500 / month</span>
-                </div>
-            </div>
-
-            <div class="list-item">
-                <span class="material-icons list-icon">bed</span>
-                <div class="list-content">
-                    <span class="list-label">Room Preference</span>
-                    <span class="list-value">Master Room</span>
-                </div>
-            </div>
-
-            <div class="list-item">
-                <span class="material-icons list-icon">pets</span>
-                <div class="list-content">
-                    <span class="list-label">Pets</span>
-                    <span class="list-value">No</span>
-                </div>
+    <nav class="bg-primary text-white sticky top-0 z-40 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-search-location text-xl"></i>
+                <h1 class="text-lg font-bold tracking-wide">BilikMatch</h1>
             </div>
             
-            <div style="padding: 16px;">
-                <button class="btn-logout" onclick="alert('Show Sign Out Modal')">
-                    <span class="material-icons">logout</span> Log Out
+            <div class="hidden lg:flex items-center gap-8">
+                <a href="chat.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Chat</a>
+                <a href="property_listing.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Discover</a>
+                <a href="profile.html" class="text-white font-bold text-sm border-b-2 border-white pb-1">Profile</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                 <button onclick="logout()" class="text-sm font-semibold hover:bg-white/10 px-3 py-1.5 rounded-full transition">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Sign Out
                 </button>
             </div>
         </div>
+    </nav>
 
+    <main class="max-w-3xl mx-auto px-4 py-8" id="profile-container" style="display: none;">
+        
+        <div class="flex flex-col items-center mb-8">
+            <div class="relative mb-4">
+                <img id="view-avatar" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md bg-gray-200">
+                <div id="view-avatar-placeholder" class="absolute inset-0 flex items-center justify-center text-3xl font-bold text-primary bg-primary-50 rounded-full hidden">U</div>
+            </div>
+            <h1 id="view-name" class="text-2xl font-bold text-gray-900">Loading...</h1>
+            <p id="view-email" class="text-gray-500 mb-6">...</p>
+            
+            <button onclick="openEditModal()" class="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-full font-medium shadow-sm hover:shadow-md transition-all">
+                <i class="fas fa-pen text-xs"></i> Edit Profile
+            </button>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='saved_posts_screen.html'">
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary">
+                        <i class="far fa-bookmark text-lg"></i>
+                    </div>
+                    <span class="font-semibold text-gray-800">Saved Listings</span>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 text-sm"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-primary uppercase tracking-wider mb-6">Personal Info</h3>
+                
+                <div class="space-y-5">
+                    <div class="flex gap-4">
+                        <i class="fas fa-birthday-cake text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Age</p>
+                            <p id="view-age" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <i class="far fa-user text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Gender</p>
+                            <p id="view-gender" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <i class="far fa-flag text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Nationality</p>
+                            <p id="view-nationality" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <i class="fas fa-briefcase text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Occupation</p>
+                            <p id="view-occupation" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <i class="fas fa-map-marker-alt text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Work Location</p>
+                            <p id="view-location" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+
+                     <div class="flex gap-4" id="row-bio">
+                        <i class="far fa-file-alt text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">About Me</p>
+                            <p id="view-bio" class="font-semibold text-gray-800 text-sm leading-relaxed">-</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4" id="row-hobbies">
+                        <i class="fas fa-gamepad text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Hobbies</p>
+                            <div id="view-hobbies" class="flex flex-wrap gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-px bg-gray-100 mx-6"></div>
+
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-primary uppercase tracking-wider mb-6">Preferences</h3>
+                
+                <div class="space-y-5">
+                    <div class="flex gap-4">
+                        <i class="far fa-calendar-alt text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Move-in Date</p>
+                            <p id="view-movein" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <i class="fas fa-wallet text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Budget</p>
+                            <p id="view-budget" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <i class="fas fa-map-marked-alt text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Preferred Areas</p>
+                            <div id="view-areas" class="flex flex-wrap gap-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <i class="fas fa-users text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Number of Pax</p>
+                            <p id="view-pax" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+                     <div class="flex gap-4">
+                        <i class="fas fa-bed text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Room Preference</p>
+                            <p id="view-roomType" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+                     <div class="flex gap-4">
+                        <i class="far fa-building text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Property Preference</p>
+                            <p id="view-propType" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <i class="fas fa-paw text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Pets</p>
+                            <p id="view-pets" class="font-semibold text-gray-800">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 bg-gray-50 border-t border-gray-100 lg:hidden">
+                <button onclick="logout()" class="w-full py-3 text-red-600 font-semibold bg-red-50 rounded-xl hover:bg-red-100 transition">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <div id="edit-modal" class="modal hidden fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm p-0 md:p-4">
+        <div class="modal-content bg-white w-full max-w-2xl h-[95vh] md:h-auto md:max-h-[90vh] rounded-t-3xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                <h2 class="text-lg font-bold">Edit Profile</h2>
+                <div class="flex items-center gap-4">
+                    <button onclick="saveProfile()" id="save-btn" class="text-primary font-bold text-sm hover:bg-primary-50 px-3 py-1 rounded-lg transition">Save</button>
+                    <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <form id="edit-form" onsubmit="event.preventDefault(); saveProfile();">
+                    
+                    <div class="flex flex-col items-center">
+                        <div class="relative">
+                            <img id="edit-avatar-preview" src="https://via.placeholder.com/150" class="w-24 h-24 rounded-full object-cover bg-gray-200">
+                            <label class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary-dark shadow-md">
+                                <i class="fas fa-camera text-xs"></i>
+                                <input type="file" class="hidden" onchange="previewImage(this)">
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Tap to change photo</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase">Personal Details</h3>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Display Name</label>
+                            <input type="text" id="inp-displayName" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Gender</label>
+                                <select id="inp-gender" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none bg-white">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Mix">Mix</option>
+                                    <option value="Not specified">Prefer not to say</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Age</label>
+                                <input type="number" id="inp-age" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Nationality</label>
+                            <input type="text" id="inp-nationality" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none">
+                        </div>
+                         <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Occupation</label>
+                            <input type="text" id="inp-occupation" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Work Location</label>
+                            <input type="text" id="inp-location" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Self Introduction</label>
+                            <textarea id="inp-bio" rows="3" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-gray-100 my-2"></div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase">Preferences</h3>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Move-in Date</label>
+                                <input type="date" id="inp-movein" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Budget (RM)</label>
+                                <input type="number" id="inp-budget" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Room Type</label>
+                            <select id="inp-roomType" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none bg-white">
+                                <option value="Single">Single</option>
+                                <option value="Middle">Middle</option>
+                                <option value="Master">Master</option>
+                                <option value="Any">Any</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Property Type</label>
+                            <select id="inp-propType" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none bg-white">
+                                <option value="Condominium">Condominium</option>
+                                <option value="Apartment">Apartment</option>
+                                <option value="Landed House">Landed House</option>
+                                <option value="Studio">Studio</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Pax</label>
+                                <select id="inp-pax" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none bg-white">
+                                    <option value="1">1 Person</option>
+                                    <option value="2">2 People</option>
+                                    <option value="3">3+ People</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Pets</label>
+                                <select id="inp-pets" class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none bg-white">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-10"></div> </form>
+            </div>
+        </div>
     </div>
 
+    <nav class="lg:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 pb-safe">
+        <div class="flex justify-around items-center h-16">
+            <a href="chat.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary">
+                <i class="far fa-comment-dots text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Chat</span>
+            </a>
+            <a href="property_listing.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary">
+                <i class="fas fa-search-location text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Discover</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center justify-center w-full h-full text-primary">
+                <i class="fas fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+             apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
+             authDomain: "whatsappclone-5ad8f.firebaseapp.com",
+             projectId: "whatsappclone-5ad8f",
+             storageBucket: "whatsappclone-5ad8f.firebasestorage.app",
+             messagingSenderId: "1049878222012",
+             appId: "1:1049878222012:web:54584a8098728e70acecb9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentProfileData = {};
+
+        // 1. Auth Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadUserProfile(user.uid);
+                document.getElementById('profile-container').style.display = 'block';
+            } else {
+                // Redirect to login if not authenticated
+                window.location.href = 'sign_in.html';
+            }
+        });
+
+        // 2. Fetch Data
+        async function loadUserProfile(uid) {
+            const docRef = doc(db, "users", uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                currentProfileData = docSnap.data();
+                renderProfile(currentProfileData);
+            } else {
+                // If new user (no doc), use defaults
+                currentProfileData = {
+                    displayName: currentUser.displayName || "New User",
+                    email: currentUser.email,
+                    profileImageUrl: currentUser.photoURL || "",
+                    age: 25,
+                    occupation: "Not specified",
+                    location: "Not specified",
+                    pets: "No",
+                    pax: 1,
+                    budget: 1000,
+                    roomType: "Middle",
+                    propertyType: "Condominium",
+                    nationality: "Not specified",
+                    selfIntroduction: "",
+                    gender: "Not specified",
+                    preferredAreas: [],
+                    hobbies: []
+                };
+                renderProfile(currentProfileData);
+            }
+        }
+
+        // 3. Render View
+        function renderProfile(data) {
+            // Header
+            setText('view-name', data.displayName);
+            setText('view-email', data.email);
+            
+            const imgEl = document.getElementById('view-avatar');
+            const placeEl = document.getElementById('view-avatar-placeholder');
+            
+            if (data.profileImageUrl) {
+                imgEl.src = data.profileImageUrl;
+                imgEl.classList.remove('hidden');
+                placeEl.classList.add('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                placeEl.classList.remove('hidden');
+                placeEl.innerText = (data.displayName || 'U')[0].toUpperCase();
+            }
+
+            // Details
+            setText('view-age', data.age + ' years old');
+            setText('view-gender', data.gender);
+            setText('view-nationality', data.nationality);
+            setText('view-occupation', data.occupation);
+            setText('view-location', data.location);
+            setText('view-bio', data.selfIntroduction || 'No introduction yet.');
+            
+            // Preferences
+            setText('view-movein', data.moveinDate ? moment(data.moveinDate.toDate()).format('MMM D, YYYY') : 'Not Set');
+            setText('view-budget', 'RM ' + data.budget + ' /month');
+            setText('view-pax', data.pax + ' Pax');
+            setText('view-roomType', data.roomType);
+            setText('view-propType', data.propertyType);
+            setText('view-pets', data.pets === 'Yes' ? 'Allowed' : 'No Pets');
+
+            // Arrays (Areas & Hobbies)
+            renderChips('view-areas', data.preferredAreas, 'bg-primary-50 text-primary');
+            renderChips('view-hobbies', data.hobbies, 'bg-gray-100 text-gray-600');
+        }
+
+        function renderChips(elementId, items, colorClass) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            if(!items || items.length === 0) {
+                container.innerHTML = '<span class="text-gray-400 text-xs italic">None listed</span>';
+                return;
+            }
+            items.forEach(item => {
+                const chip = document.createElement('span');
+                chip.className = `px-3 py-1 rounded-full text-xs font-bold ${colorClass}`;
+                chip.innerText = item;
+                container.appendChild(chip);
+            });
+        }
+
+        function setText(id, val) {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val || '-';
+        }
+
+        // 4. Edit Modal Logic
+        window.openEditModal = () => {
+            const d = currentProfileData;
+            
+            // Populate inputs
+            setVal('inp-displayName', d.displayName);
+            setVal('inp-age', d.age);
+            setVal('inp-gender', d.gender);
+            setVal('inp-nationality', d.nationality);
+            setVal('inp-occupation', d.occupation);
+            setVal('inp-location', d.location);
+            setVal('inp-bio', d.selfIntroduction);
+            setVal('inp-budget', d.budget);
+            setVal('inp-pax', d.pax);
+            setVal('inp-pets', d.pets);
+            setVal('inp-roomType', d.roomType);
+            setVal('inp-propType', d.propertyType);
+
+            // Date Handling
+            if(d.moveinDate) {
+                 // Convert Firestore Timestamp to YYYY-MM-DD
+                 const date = d.moveinDate.toDate ? d.moveinDate.toDate() : new Date(d.moveinDate);
+                 document.getElementById('inp-movein').value = date.toISOString().split('T')[0];
+            } else {
+                 document.getElementById('inp-movein').value = '';
+            }
+
+            // Show Modal
+            const modal = document.getElementById('edit-modal');
+            modal.classList.remove('hidden');
+        };
+
+        window.closeEditModal = () => {
+             document.getElementById('edit-modal').classList.add('hidden');
+        };
+
+        window.previewImage = (input) => {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('edit-avatar-preview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 5. Save Logic
+        window.saveProfile = async () => {
+            if(!currentUser) return;
+            
+            const btn = document.getElementById('save-btn');
+            btn.innerText = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                // Get values
+                const updatedData = {
+                    ...currentProfileData,
+                    displayName: getVal('inp-displayName'),
+                    age: parseInt(getVal('inp-age')) || 18,
+                    gender: getVal('inp-gender'),
+                    nationality: getVal('inp-nationality'),
+                    occupation: getVal('inp-occupation'),
+                    location: getVal('inp-location'),
+                    selfIntroduction: getVal('inp-bio'),
+                    budget: parseFloat(getVal('inp-budget')) || 0,
+                    pax: parseInt(getVal('inp-pax')) || 1,
+                    pets: getVal('inp-pets'),
+                    roomType: getVal('inp-roomType'),
+                    propertyType: getVal('inp-propType'),
+                };
+
+                // Handle Date
+                const dateStr = getVal('inp-movein');
+                if(dateStr) {
+                    updatedData.moveinDate = new Date(dateStr);
+                }
+
+                // Handle Image (Stub - in real app upload to Storage here)
+                // For now we assume if the preview src changed to base64, we'd upload it.
+                // Keeping existing URL for this demo.
+
+                // Update Firestore
+                await setDoc(doc(db, "users", currentUser.uid), updatedData, { merge: true });
+                
+                // Refresh View
+                currentProfileData = updatedData;
+                renderProfile(updatedData);
+                closeEditModal();
+                
+            } catch (e) {
+                console.error("Error saving profile: ", e);
+                alert("Failed to save profile.");
+            } finally {
+                btn.innerText = 'Save';
+                btn.disabled = false;
+            }
+        };
+
+        function getVal(id) { return document.getElementById(id).value; }
+        function setVal(id, val) { 
+            const el = document.getElementById(id);
+            if(el) el.value = val !== undefined ? val : ''; 
+        }
+
+        // 6. Global Logout
+        window.logout = () => {
+            signOut(auth).then(() => {
+                window.location.href = 'sign_in.html';
+            });
+        };
+    </script>
 </body>
 </html>
