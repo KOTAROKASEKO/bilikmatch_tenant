@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat | BilikMatch</title>
+    <title>My Chats | BilikMatch</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -18,12 +22,11 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-gray); }
 
-        /* Custom Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
 
-        /* Mobile Responsive Logic */
+        /* Mobile View Logic */
         .chat-view-active #thread-list { display: none; }
         .chat-view-active #message-view { display: flex; }
         
@@ -38,11 +41,11 @@
     <nav class="bg-[#673ab7] text-white shrink-0 shadow-md z-20">
         <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <a href="property_listing.html" class="hover:opacity-80 transition"><i class="fas fa-arrow-left"></i></a>
+                <a href="../property_listing.html" class="hover:opacity-80 transition"><i class="fas fa-arrow-left"></i></a>
                 <h1 class="text-lg font-bold tracking-wide">My Chats</h1>
             </div>
             <div class="flex items-center gap-4">
-                <a href="property_listing.html" class="text-white/80 hover:text-white text-sm font-medium">Discover</a>
+                <a href="../property_listing.html" class="text-white/80 hover:text-white text-sm font-medium">Discover</a>
                 <a href="prof/profile.html" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition">
                     <i class="fas fa-user text-xs"></i>
                 </a>
@@ -59,14 +62,14 @@
                     <input type="text" placeholder="Search chats..." class="w-full pl-9 pr-4 py-2 bg-gray-50 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#673ab7]">
                 </div>
             </div>
-            
             <div id="threads-container" class="flex-1 overflow-y-auto custom-scroll">
-                <div class="p-8 text-center text-gray-400 text-sm animate-pulse">Loading chats...</div>
+                <div class="p-8 text-center text-gray-400 text-sm animate-pulse">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>Loading chats...
+                </div>
             </div>
         </aside>
 
         <section id="message-view" class="flex-1 hidden md:flex flex-col bg-[#f8fafc] relative">
-            
             <div id="empty-chat-state" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
                 <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                     <i class="fas fa-comments text-3xl text-gray-300"></i>
@@ -78,19 +81,16 @@
                 <div class="flex items-center gap-3">
                     <button onclick="backToThreads()" class="md:hidden text-gray-500 hover:text-[#673ab7]"><i class="fas fa-arrow-left"></i></button>
                     <div class="relative">
-                        <img id="header-avatar" src="https://via.placeholder.com/40" class="w-10 h-10 rounded-full object-cover border border-gray-200">
-                        <span id="header-status" class="hidden absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                        <img id="header-avatar" src="" onerror="this.src='https://placehold.co/40x40/673ab7/ffffff?text=U'" class="w-10 h-10 rounded-full object-cover border border-gray-200">
                     </div>
                     <div>
                         <h2 id="header-name" class="font-bold text-gray-800 text-sm">User</h2>
-                        <p class="text-xs text-green-600 font-medium">Online</p>
+                        <p id="connection-status" class="text-xs text-green-600 font-medium">Online</p>
                     </div>
                 </div>
-                <button class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-ellipsis-v"></i></button>
             </header>
 
-            <div id="messages-container" class="hidden flex-1 overflow-y-auto p-4 space-y-4 custom-scroll">
-                </div>
+            <div id="messages-container" class="hidden flex-1 overflow-y-auto p-4 space-y-4 custom-scroll"></div>
 
             <div id="chat-input-area" class="hidden bg-white p-4 border-t border-gray-100">
                 <form id="message-form" class="flex items-end gap-2">
@@ -103,7 +103,6 @@
                     </button>
                 </form>
             </div>
-
         </section>
     </main>
 
@@ -112,10 +111,10 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { 
             getFirestore, collection, query, where, or, orderBy, onSnapshot, 
-            doc, getDoc, addDoc, updateDoc, serverTimestamp, setDoc 
+            doc, getDoc, addDoc, updateDoc, serverTimestamp, setDoc,
+            enableIndexedDbPersistence 
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- Configuration ---
         const firebaseConfig = {
              apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
              authDomain: "whatsappclone-5ad8f.firebaseapp.com",
@@ -129,75 +128,96 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        enableIndexedDbPersistence(db)
+            .catch((err) => console.log("Persistence error:", err.code));
+
+        window.addEventListener('online',  updateStatus);
+        window.addEventListener('offline', updateStatus);
+        function updateStatus() {
+            const statusEl = document.getElementById('connection-status');
+            if(statusEl) {
+                statusEl.innerText = navigator.onLine ? "Online" : "Offline (Using Cache)";
+                statusEl.className = navigator.onLine ? "text-xs text-green-600 font-medium" : "text-xs text-orange-500 font-medium";
+            }
+        }
+        updateStatus();
+
         let currentUser = null;
         let currentThreadId = null;
         let messagesUnsubscribe = null;
         let activeThreadData = null;
+        // ★ 修正1: 処理中のスナップショットを管理する変数
+        let latestSnapshotId = 0; 
 
-        // --- Auth State Listener ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 initChatList();
             } else {
-                window.location.href = 'features/signin/sign_in.html';
+                window.location.href = '../features/signin/sign_in.html';
             }
         });
 
-        // --- 1. Load Chat Threads (Sidebar) ---
         function initChatList() {
             const threadsContainer = document.getElementById('threads-container');
-            
-            // Query: Find chats where user is sender OR receiver
-            // Matches Flutter logic: Filter.or(Filter('whoSent'...), Filter('whoReceived'...))
             const q = query(
                 collection(db, "chats"),
-                or(
-                    where("whoSent", "==", currentUser.uid),
-                    where("whoReceived", "==", currentUser.uid)
-                ),
+                or(where("whoSent", "==", currentUser.uid), where("whoReceived", "==", currentUser.uid)),
                 orderBy("timeStamp", "desc")
             );
 
-            onSnapshot(q, (snapshot) => {
-                threadsContainer.innerHTML = '';
-                
+            onSnapshot(q, async (snapshot) => {
+                // ★ 修正2: 現在の処理IDを発行し、古い処理の結果を無視するようにする
+                const currentSnapshotId = ++latestSnapshotId;
+
                 if (snapshot.empty) {
-                    threadsContainer.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-64 text-gray-400">
-                            <i class="far fa-comments text-4xl mb-2"></i>
-                            <p class="text-sm">No conversations yet.</p>
-                        </div>`;
+                    if (currentSnapshotId === latestSnapshotId) {
+                        threadsContainer.innerHTML = `<div class="p-8 text-center text-gray-400 text-sm">No conversations yet.</div>`;
+                    }
                     return;
                 }
 
-                snapshot.forEach(async (docSnapshot) => {
+                // ★ 修正3: forEachでの直接描画をやめ、データを配列にマップする
+                const threadPromises = snapshot.docs.map(async (docSnapshot) => {
                     const data = docSnapshot.data();
                     const threadId = docSnapshot.id;
-                    
-                    // Determine Other User ID
                     const otherUserId = data.whoSent === currentUser.uid ? data.whoReceived : data.whoSent;
                     
-                    // Fetch Other User Profile (MVP: Direct fetch, optimizing by caching in memory is better for prod)
+                    // 非同期でプロフィール取得
                     const userProfile = await fetchUserProfile(otherUserId);
                     
-                    const isSelected = threadId === currentThreadId;
-                    const lastMsg = data.lastMessage || 'Sent an attachment';
-                    const time = data.timeStamp ? moment(data.timeStamp.toDate()).fromNow(true) : '';
+                    return {
+                        threadId,
+                        data,
+                        userProfile,
+                        otherUserId
+                    };
+                });
 
-                    // Create Thread Element
+                // ★ 修正4: 全てのデータ取得が終わるまで待つ (Promise.all)
+                const threadsData = await Promise.all(threadPromises);
+
+                // ★ 修正5: 待っている間に新しいスナップショットが来ていたら、この古い結果は捨てる
+                if (currentSnapshotId !== latestSnapshotId) return;
+
+                // ★ 修正6: 一括描画 (これで順番通り、かつ重複なしになる)
+                threadsContainer.innerHTML = '';
+                
+                threadsData.forEach(({ threadId, data, userProfile, otherUserId }) => {
+                    const isSelected = threadId === currentThreadId;
+                    const lastMsg = data.lastMessage || 'Attachment';
+                    let timeDisplay = data.timeStamp ? moment(data.timeStamp.toDate()).fromNow(true) : '';
+                    
                     const div = document.createElement('div');
-                    div.className = `flex items-center gap-3 p-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition ${isSelected ? 'bg-purple-50 border-l-4 border-l-[#673ab7]' : ''}`;
+                    div.className = `flex items-center gap-3 p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition ${isSelected ? 'bg-purple-50 border-l-4 border-l-[#673ab7]' : ''}`;
                     div.onclick = () => openChat(threadId, otherUserId, userProfile);
                     
                     div.innerHTML = `
-                        <div class="relative">
-                            <img src="${userProfile.photoUrl || 'https://via.placeholder.com/40'}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
-                        </div>
+                        <img src="${userProfile.photoUrl || `https://placehold.co/100x100/673ab7/ffffff?text=${userProfile.name.charAt(0)}`}" class="w-12 h-12 rounded-full object-cover border border-gray-200">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline mb-1">
                                 <h3 class="font-bold text-gray-800 text-sm truncate">${userProfile.name}</h3>
-                                <span class="text-[10px] text-gray-400">${time}</span>
+                                <span class="text-[10px] text-gray-400">${timeDisplay}</span>
                             </div>
                             <p class="text-xs text-gray-500 truncate ${data[`unreadCount_${currentUser.uid}`] > 0 ? 'font-bold text-gray-800' : ''}">
                                 ${lastMsg}
@@ -205,7 +225,6 @@
                         </div>
                         ${data[`unreadCount_${currentUser.uid}`] > 0 ? `<div class="w-5 h-5 rounded-full bg-[#673ab7] text-white text-[10px] flex items-center justify-center font-bold">${data[`unreadCount_${currentUser.uid}`]}</div>` : ''}
                     `;
-                    
                     threadsContainer.appendChild(div);
                 });
             });
@@ -213,189 +232,110 @@
 
         async function fetchUserProfile(uid) {
             try {
-                const docRef = doc(db, "users_prof", uid);
-                const snap = await getDoc(docRef);
-                if (snap.exists()) {
-                    return { 
-                        name: snap.data().displayName || 'User', 
-                        photoUrl: snap.data().profileImageUrl 
-                    };
-                }
-            } catch (e) { console.error(e); }
+                const snap = await getDoc(doc(db, "users_prof", uid));
+                if (snap.exists()) return { name: snap.data().displayName || 'User', photoUrl: snap.data().profileImageUrl };
+            } catch (e) {}
             return { name: 'User', photoUrl: null };
         }
 
-        // --- 2. Open Chat (Main View) ---
         window.openChat = async (threadId, otherUserId, otherUserProfile) => {
             currentThreadId = threadId;
             activeThreadData = { otherUserId, ...otherUserProfile };
 
-            // UI Transitions
-            document.body.classList.add('chat-view-active'); // Mobile view toggle
+            document.body.classList.add('chat-view-active');
             document.getElementById('empty-chat-state').classList.add('hidden');
             document.getElementById('chat-header').classList.remove('hidden');
             document.getElementById('messages-container').classList.remove('hidden');
             document.getElementById('chat-input-area').classList.remove('hidden');
 
-            // Set Header Info
             document.getElementById('header-name').innerText = otherUserProfile.name;
-            document.getElementById('header-avatar').src = otherUserProfile.photoUrl || 'https://via.placeholder.com/40';
+            document.getElementById('header-avatar').src = otherUserProfile.photoUrl || `https://placehold.co/100x100/673ab7/ffffff?text=${otherUserProfile.name.charAt(0)}`;
 
-            // Unsubscribe previous listener
             if (messagesUnsubscribe) messagesUnsubscribe();
 
-            // Reset Unread Count for Current User
-            await updateDoc(doc(db, "chats", threadId), {
-                [`unreadCount_${currentUser.uid}`]: 0
-            });
+            try {
+                await updateDoc(doc(db, "chats", threadId), { [`unreadCount_${currentUser.uid}`]: 0 });
+            } catch(e) {}
 
-            // Listen to Messages
-            const q = query(
-                collection(db, "chats", threadId, "messages"),
-                orderBy("timestamp", "asc")
-            );
-
+            const q = query(collection(db, "chats", threadId, "messages"), orderBy("timestamp", "asc"));
             const container = document.getElementById('messages-container');
             
             messagesUnsubscribe = onSnapshot(q, (snapshot) => {
                 container.innerHTML = '';
                 snapshot.forEach((docSnap) => {
                     const msg = docSnap.data();
-                    const isMe = msg.whoSentId === currentUser.uid;
-                    renderMessage(container, msg, isMe);
+                    renderMessage(container, msg, msg.whoSentId === currentUser.uid);
                 });
-                // Auto scroll to bottom
                 container.scrollTop = container.scrollHeight;
             });
+            
+            // Re-render chat list to highlight selection
+            initChatList(); 
         };
 
-        // --- 3. Render Message Bubble ---
         function renderMessage(container, msg, isMe) {
             const div = document.createElement('div');
             div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`;
-
             let contentHtml = '';
 
-            // --- Handle Different Message Types ---
             if (msg.messageType === 'text') {
                 contentHtml = `<p class="text-sm leading-relaxed whitespace-pre-wrap">${msg.text}</p>`;
-            } 
-            else if (msg.messageType === 'image') {
-                contentHtml = `<img src="${msg.remoteUrl}" class="rounded-lg max-w-[200px] cursor-pointer hover:opacity-90 transition">`;
-            } 
-            else if (msg.messageType === 'property_template') {
-                // ★★★ PROPERTY WIDGET RENDERING ★★★
-                // Parse the JSON string stored in 'text'
+            } else if (msg.messageType === 'property_template') {
                 try {
                     const propData = JSON.parse(msg.text);
-                    const coverImg = (propData.photoUrls && propData.photoUrls.length > 0) 
-                        ? propData.photoUrls[0] 
-                        : 'https://via.placeholder.com/300x200?text=No+Image';
-                    
+                    const coverImg = (propData.photoUrls && propData.photoUrls.length > 0) ? propData.photoUrls[0] : 'https://placehold.co/300x200?text=No+Image';
                     contentHtml = `
                         <div class="bg-white rounded-lg overflow-hidden w-64 shadow-sm border border-gray-100/50">
                             <div class="h-32 bg-gray-200 relative">
                                 <img src="${coverImg}" class="w-full h-full object-cover">
-                                <div class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded font-bold">
-                                    RM ${propData.rent}
-                                </div>
+                                <div class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded font-bold">RM ${propData.rent}</div>
                             </div>
                             <div class="p-3">
                                 <h4 class="font-bold text-gray-800 text-sm truncate mb-1">${propData.name || 'Property'}</h4>
                                 <p class="text-xs text-gray-500 mb-2 truncate"><i class="fas fa-map-marker-alt mr-1"></i>${propData.location || 'Unknown'}</p>
-                                <div class="flex gap-1 mb-2">
-                                    <span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">${propData.roomType || 'Room'}</span>
-                                    <span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">${propData.gender || 'Mix'}</span>
-                                </div>
-                                <a href="../property_detail.html?id=${propData.postId}" target="_blank" class="block text-center w-full py-1.5 bg-[#673ab7] hover:bg-[#5e35b1] text-white text-xs font-bold rounded transition">
-                                    View Details
-                                </a>
+                                <a href="../features/property_detail.html?id=${propData.postId}" target="_blank" class="block text-center w-full py-1.5 bg-[#673ab7] hover:bg-[#5e35b1] text-white text-xs font-bold rounded transition">View Details</a>
                             </div>
-                        </div>
-                    `;
-                } catch (e) {
-                    contentHtml = `<p class="text-red-500 text-xs italic">Error loading property widget</p>`;
-                }
-            } 
-            else if (msg.messageType === 'audio') {
-                contentHtml = `
-                    <div class="flex items-center gap-2 min-w-[120px]">
-                        <button class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fas fa-play text-xs"></i></button>
-                        <div class="h-1 bg-white/30 flex-1 rounded-full"></div>
-                        <span class="text-[10px] opacity-80">Voice</span>
-                    </div>`;
+                        </div>`;
+                } catch (e) { contentHtml = `<p class="text-red-500 text-xs italic">Error loading property</p>`; }
+            } else if (msg.messageType === 'image') {
+                contentHtml = `<img src="${msg.remoteUrl}" onerror="this.src='https://placehold.co/200x200?text=Image+Error'" class="rounded-lg max-w-[200px] cursor-pointer hover:opacity-90 transition bg-gray-100">`;
             }
 
-            // --- Bubble Styling ---
-            const bubbleClass = isMe 
-                ? 'bg-[#673ab7] text-white rounded-2xl rounded-tr-sm shadow-md' 
-                : 'bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-tl-sm shadow-sm';
+            const bubbleClass = isMe ? 'bg-[#673ab7] text-white rounded-2xl rounded-tr-sm shadow-md' : 'bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-tl-sm shadow-sm';
+            const timeStr = msg.timestamp ? moment(msg.timestamp.toDate()).format('h:mm A') : '...';
 
             div.innerHTML = `
                 <div class="max-w-[80%] md:max-w-[60%]">
-                    <div class="px-4 py-3 ${bubbleClass} ${msg.messageType === 'property_template' ? 'p-0 overflow-hidden !bg-transparent !shadow-none !border-none' : ''}">
+                    <div class="px-4 py-3 ${bubbleClass} ${msg.messageType === 'property_template' ? '!p-0 !bg-transparent !shadow-none !border-none' : ''}">
                         ${contentHtml}
                     </div>
-                    <p class="text-[10px] text-gray-400 mt-1 ${isMe ? 'text-right' : 'text-left'}">
-                        ${msg.timestamp ? moment(msg.timestamp.toDate()).format('h:mm A') : 'Sending...'}
-                        ${isMe ? (msg.isRead ? '<i class="fas fa-check-double text-blue-400 ml-1"></i>' : '<i class="fas fa-check text-gray-300 ml-1"></i>') : ''}
-                    </p>
-                </div>
-            `;
+                    <p class="text-[10px] text-gray-400 mt-1 ${isMe ? 'text-right' : 'text-left'}">${timeStr}</p>
+                </div>`;
             container.appendChild(div);
         }
 
-        // --- 4. Send Message ---
         document.getElementById('message-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text || !currentThreadId) return;
-
-            input.value = ''; // Clear input immediately
+            input.value = '';
 
             try {
-                // 1. Add Message to Subcollection
                 await addDoc(collection(db, "chats", currentThreadId, "messages"), {
-                    text: text,
-                    messageType: 'text',
-                    whoSentId: currentUser.uid,
-                    whoReceivedId: activeThreadData.otherUserId,
-                    timestamp: serverTimestamp(),
-                    isRead: false,
-                    operation: 'normal'
+                    text: text, messageType: 'text', whoSentId: currentUser.uid, whoReceivedId: activeThreadData.otherUserId, timestamp: serverTimestamp(), isRead: false, operation: 'normal'
                 });
-
-                // 2. Update Chat Thread (Last Message)
                 await setDoc(doc(db, "chats", currentThreadId), {
-                    lastMessage: text,
-                    timeStamp: serverTimestamp(),
-                    whoSent: currentUser.uid,
-                    whoReceived: activeThreadData.otherUserId,
-                    [`unreadCount_${activeThreadData.otherUserId}`]: 1, // Need increment logic in real app, simplistic here
-                    participants: [currentUser.uid, activeThreadData.otherUserId] // Ensure participant array exists
+                    lastMessage: text, timeStamp: serverTimestamp(), whoSent: currentUser.uid, whoReceived: activeThreadData.otherUserId, [`unreadCount_${activeThreadData.otherUserId}`]: 1, participants: [currentUser.uid, activeThreadData.otherUserId]
                 }, { merge: true });
-
-            } catch (err) {
-                console.error("Error sending message:", err);
-                alert("Failed to send message");
-            }
+            } catch (err) { console.error("Error sending message:", err); }
         });
 
-        // --- Helper: Back Button (Mobile) ---
         window.backToThreads = () => {
             document.body.classList.remove('chat-view-active');
             currentThreadId = null;
             if (messagesUnsubscribe) messagesUnsubscribe();
         };
-
-        // --- Helper: Auto-resize Textarea ---
-        const textarea = document.getElementById('message-input');
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-
     </script>
 </body>
 </html>

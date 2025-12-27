@@ -58,7 +58,7 @@
             </div>
             
             <div class="hidden lg:flex items-center gap-8">
-                <a href="chat.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Chat</a>
+                <a href="../chat/chat.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Chat</a>
                 <a href="property_listing.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Discover</a>
                 <a href="profile.html" class="text-white font-bold text-sm border-b-2 border-white pb-1">Profile</a>
             </div>
@@ -359,7 +359,7 @@
 
     <nav class="lg:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 z-50 pb-safe">
         <div class="flex justify-around items-center h-16">
-            <a href="chat.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary">
+            <a href="../chat/chat.html" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-primary">
                 <i class="far fa-comment-dots text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">Chat</span>
             </a>
@@ -403,7 +403,7 @@
                 document.getElementById('profile-container').style.display = 'block';
             } else {
                 // Redirect to login if not authenticated
-                window.location.href = 'sign_in.html';
+                window.location.href = '../signin/sign_in.html';
             }
         });
 
@@ -607,7 +607,7 @@
         // 6. Global Logout
         window.logout = () => {
             signOut(auth).then(() => {
-                window.location.href = 'sign_in.html';
+                window.location.href = '../signin/sign_in.html';
             });
         };
     </script>

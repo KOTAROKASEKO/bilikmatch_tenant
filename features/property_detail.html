@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Property Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch.umd.js"></script>
     <style>
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Add padding to body to prevent content from being hidden behind bottom bar */
+        body { padding-bottom: 80px; } 
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen pb-10">
+<body class="bg-gray-50 min-h-screen">
 
     <nav class="bg-white shadow-sm p-4 sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto flex items-center">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
             <a href="property_listing.html" class="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-semibold">
                 &larr; Back to Listings
             </a>
@@ -46,11 +49,11 @@
                     <div>
                         <h1 id="d-title" class="text-2xl font-bold text-gray-900 leading-tight"></h1>
                         <p class="text-gray-500 mt-1 flex items-center gap-1">
-                            <span id="d-address"></span>
+                            <i class="fas fa-map-marker-alt text-xs"></i> <span id="d-address"></span>
                         </p>
                     </div>
                     <div class="text-left md:text-right">
-                        <p class="text-3xl font-black text-purple-700">RM <span id="d-rent"></span></p>
+                        <p class="text-3xl font-black text-[#673ab7]">RM <span id="d-rent"></span></p>
                         <p class="text-sm text-gray-500">per month</p>
                     </div>
                 </div>
@@ -90,78 +93,211 @@
                 <h3 class="font-bold text-lg mb-3">Description</h3>
                 <p id="d-description" class="text-gray-700 leading-relaxed whitespace-pre-line"></p>
             </div>
+            
+             <div class="bg-white rounded-2xl shadow-sm p-6 mb-4">
+                <h3 class="font-bold text-lg mb-3">Agent / Owner</h3>
+                <div class="flex items-center gap-3">
+                    <img id="agent-avatar" src="https://placehold.co/50x50?text=A" class="w-12 h-12 rounded-full bg-gray-200 object-cover">
+                    <div>
+                        <p id="agent-name" class="font-bold text-gray-800">Loading...</p>
+                        <p class="text-xs text-green-600 font-medium"><i class="fas fa-check-circle"></i> Verified Agent</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <script>
+    <div id="action-bar" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50 hidden">
+        <div class="max-w-4xl mx-auto flex gap-3">
+            <button onclick="handleWhatsApp()" class="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md">
+                <i class="fab fa-whatsapp text-xl"></i>
+                <span>WhatsApp</span>
+            </button>
+            
+            <button onclick="handleChat()" class="flex-1 bg-[#673ab7] hover:bg-[#5e35b1] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md">
+                <i class="fas fa-comments text-xl"></i>
+                <span>Chat Now</span>
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+             apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
+             authDomain: "whatsappclone-5ad8f.firebaseapp.com",
+             projectId: "whatsappclone-5ad8f",
+             storageBucket: "whatsappclone-5ad8f.firebasestorage.app",
+             messagingSenderId: "1049878222012",
+             appId: "1:1049878222012:web:54584a8098728e70acecb9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
         const searchClient = algoliasearch('86BOLZBS9Q', '5da01cabd95ead996a8c0002b09c4b63');
         const index = searchClient.initIndex('bilik_match_index');
 
-        // Safe text setter helper
-        function setText(id, value) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.textContent = value;
-            } else {
-                console.warn(`Element with ID '${id}' not found in HTML. Skipping.`);
+        let currentUser = null;
+        let propertyData = null;
+        let agentProfile = null;
+
+        // Auth Check
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+        });
+
+        // 1. WhatsApp Logic
+        window.handleWhatsApp = () => {
+            if (!agentProfile || !agentProfile.phoneNumber) {
+                alert("Sorry, no phone number available for this agent.");
+                return;
             }
-        }
+            
+            // Basic cleaning of phone number
+            let phone = agentProfile.phoneNumber.replace(/\D/g, ''); 
+            // Default to Malaysia '60' if missing country code (heuristic)
+            if (!phone.startsWith('60') && !phone.startsWith('1')) {
+                phone = '60' + phone;
+            }
 
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
-        }
+            const message = `Hi, I'm interested in your property: ${propertyData.condominiumName || 'this room'}. Is it still available?`;
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        };
 
+        // 2. Chat Logic (Direct Chat)
+        window.handleChat = async () => {
+            if (!currentUser) {
+                // Redirect to Login if not signed in
+                if(confirm("You need to sign in to chat. Go to login?")) {
+                    window.location.href = 'signin/sign_in.html';
+                }
+                return;
+            }
+
+            if (!propertyData || !propertyData.userId) {
+                alert("Cannot start chat: Agent info missing.");
+                return;
+            }
+
+            const otherUserId = propertyData.userId;
+            
+            // Prevent chatting with self
+            if (currentUser.uid === otherUserId) {
+                alert("This is your own property!");
+                return;
+            }
+
+            // Generate Thread ID (Alphabetical Order)
+            // Matches Flutter Logic
+            const uids = [currentUser.uid, otherUserId].sort();
+            const threadId = uids.join('_');
+
+            // Initial Message / Thread Creation
+            try {
+                const threadRef = doc(db, 'chats', threadId);
+                const threadSnap = await getDoc(threadRef);
+
+                if (!threadSnap.exists()) {
+                    // Create new thread if it doesn't exist
+                    await setDoc(threadRef, {
+                        participants: uids,
+                        whoSent: currentUser.uid,
+                        whoReceived: otherUserId,
+                        lastMessage: "Started a conversation",
+                        timeStamp: serverTimestamp(),
+                        [`unreadCount_${otherUserId}`]: 1,
+                        [`unreadCount_${currentUser.uid}`]: 0,
+                    });
+                }
+                
+                // Redirect to Chat Page
+                // Note: Chat page shows list. Ideally, it should auto-open this thread.
+                // For MVP, redirecting to the chat list is the first step.
+                // You can enhance chat.html later to read ?threadId=XYZ from URL.
+                window.location.href = `chat/chat.html`;
+
+            } catch (e) {
+                console.error("Chat creation error:", e);
+                alert("Failed to start chat. Please try again.");
+            }
+        };
+
+        // Load Data
         async function loadProperty() {
-            const propertyId = getQueryParam('id');
-            if (!propertyId) return showError("No property ID specified.");
+            const urlParams = new URLSearchParams(window.location.search);
+            const propertyId = urlParams.get('id');
+            
+            if (!propertyId) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error-message').textContent = "No Property ID Provided";
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
 
             try {
+                // Fetch from Algolia
                 const data = await index.getObject(propertyId);
-                console.log("Fetched Data:", data); // Debugging
+                propertyData = data;
                 renderProperty(data);
+                
+                // Fetch Agent Profile (Firestore)
+                if (data.userId) {
+                    const agentSnap = await getDoc(doc(db, 'users_prof', data.userId));
+                    if (agentSnap.exists()) {
+                        agentProfile = agentSnap.data();
+                        
+                        // Update UI with Agent Info
+                        document.getElementById('agent-name').innerText = agentProfile.displayName || "Agent";
+                        if(agentProfile.profileImageUrl) {
+                            document.getElementById('agent-avatar').src = agentProfile.profileImageUrl;
+                        }
+                    }
+                }
+
+                // Show Action Bar
+                document.getElementById('action-bar').classList.remove('hidden');
+
             } catch (err) {
                 console.error(err);
-                showError("Property not found.");
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error-message').classList.remove('hidden');
             }
-        }
-
-        function showError(msg) {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('error-message').textContent = msg;
-            document.getElementById('error-message').classList.remove('hidden');
         }
 
         function renderProperty(data) {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('property-content').classList.remove('hidden');
 
-            // --- 1. Basic Info (Using safe setter) ---
             setText('d-title', data.condominiumName || 'Untitled');
-            setText('d-address', data.location || data.address || 'Unknown Location');
+            setText('d-address', data.location || data.address || 'Unknown');
             setText('d-rent', data.rent || '0');
             setText('d-roomType', (data.roomType || 'Room') + ' Room');
             setText('d-gender', (data.gender || 'Mix') + ' Unit');
-            setText('d-description', data.description || 'No description.');
+            setText('d-description', data.description || 'No description available.');
 
-            // --- 2. Image Gallery ---
+            // Gallery
             const gallery = document.getElementById('image-gallery');
             if (gallery) {
                 gallery.innerHTML = '';
-                const images = data.imageUrls || data.images || [];
+                const images = data.imageUrls || [];
                 if (images.length > 0) {
                     images.forEach(imgUrl => {
-                        const div = document.createElement('div');
-                        div.className = "snap-center shrink-0 w-[85%] md:w-[60%] aspect-[4/3] rounded-xl overflow-hidden shadow-sm border border-gray-100";
-                        div.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover">`;
-                        gallery.appendChild(div);
+                        gallery.innerHTML += `
+                            <div class="snap-center shrink-0 w-[85%] md:w-[60%] aspect-[4/3] rounded-xl overflow-hidden shadow-sm border border-gray-100 relative">
+                                <img src="${imgUrl}" class="w-full h-full object-cover">
+                            </div>`;
                     });
                 } else {
-                    gallery.innerHTML = `<div class="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500">No Images</div>`;
+                    gallery.innerHTML = `<div class="w-full h-64 bg-gray-100 flex items-center justify-center text-gray-400">No Images</div>`;
                 }
             }
 
-            // --- 3. Initial Cost Calculation ---
+            // Calculations
             const rent = parseFloat(data.rent) || 0;
             const secDepRate = data.securityDeposit !== undefined ? parseFloat(data.securityDeposit) : 2.0;
             const utilDepRate = data.utilityDeposit !== undefined ? parseFloat(data.utilityDeposit) : 0.5;
@@ -177,6 +313,11 @@
             setText('cost-security', security.toFixed(0));
             setText('cost-utility', utility.toFixed(0));
             setText('cost-total', total.toFixed(0));
+        }
+
+        function setText(id, val) {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val;
         }
 
         loadProperty();
