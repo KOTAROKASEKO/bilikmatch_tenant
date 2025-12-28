@@ -59,7 +59,7 @@
             
             <div class="hidden lg:flex items-center gap-8">
                 <a href="../chat/chat.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Chat</a>
-                <a href="property_listing.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Discover</a>
+                <a href="../property_listing.html" class="text-white/80 hover:text-white font-medium text-sm transition-colors">Discover</a>
                 <a href="profile.html" class="text-white font-bold text-sm border-b-2 border-white pb-1">Profile</a>
             </div>
 
@@ -86,19 +86,46 @@
             </button>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='saved_posts_screen.html'">
-            <div class="p-4 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary">
-                        <i class="far fa-bookmark text-lg"></i>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6">
+                <h3 class="text-sm font-bold text-primary uppercase tracking-wider mb-6">Personal Info</h3>
+                
+                <div class="space-y-5">
+                    <div class="flex gap-4">
+                        <i class="fas fa-building-user text-gray-400 w-5 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs text-gray-500">Commute Destination (Work/School)</p>
+                            <p id="view-location" class="font-semibold text-gray-800">-</p>
+                        </div>
                     </div>
-                    <span class="font-semibold text-gray-800">Saved Listings</span>
-                </div>
-                <i class="fas fa-chevron-right text-gray-400 text-sm"></i>
+                    
+                    </div>
+            </div>
+            </div>
+
+    <div id="edit-modal" class="modal hidden ...">
+        <div class="space-y-4">
+            <h3 class="text-xs font-bold text-gray-400 uppercase">Personal Details</h3>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Work/School Address (for Commute Calc)</label>
+                <input type="text" id="inp-location" placeholder="e.g. Sunway University, KL Sentral..." class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none">
+            </div>
+
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div id="edit-modal" class="modal hidden ...">
+        <div class="space-y-4">
+            <h3 class="text-xs font-bold text-gray-400 uppercase">Personal Details</h3>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Work/School Address (for Commute Calc)</label>
+                <input type="text" id="inp-location" placeholder="e.g. Sunway University, KL Sentral..." class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none">
+            </div>
+
+            </div>
+        </div>
             
             <div class="p-6">
                 <h3 class="text-sm font-bold text-primary uppercase tracking-wider mb-6">Personal Info</h3>
@@ -378,7 +405,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+        
         const firebaseConfig = {
              apiKey: "AIzaSyBCCxQ0AYTHy6A6DrfW7ylYxjGW6AZA1OQ",
              authDomain: "whatsappclone-5ad8f.firebaseapp.com",
@@ -391,9 +419,25 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const functions = getFunctions(app);
+        const geocodeFunction = httpsCallable(functions, 'geocode');
 
         let currentUser = null;
         let currentProfileData = {};
+
+        async function getCoords(address) {
+            if (!address) return null;
+            try {
+                const result = await geocodeFunction({ address: address });
+                // result.data は { lat: ..., lng: ... } または { error: ... }
+                if (result.data && result.data.lat && result.data.lng) {
+                    return { lat: result.data.lat, lng: result.data.lng };
+                }
+            } catch (e) {
+                console.error(`Geocoding failed for ${address}:`, e);
+            }
+            return null;
+        }
 
         // 1. Auth Listener
         onAuthStateChanged(auth, async (user) => {
@@ -462,7 +506,7 @@
             setText('view-age', data.age + ' years old');
             setText('view-gender', data.gender);
             setText('view-nationality', data.nationality);
-            setText('view-occupation', data.occupation);
+            setText('view-location', data.location);
             setText('view-location', data.location);
             setText('view-bio', data.selfIntroduction || 'No introduction yet.');
             
@@ -508,7 +552,7 @@
             setVal('inp-age', d.age);
             setVal('inp-gender', d.gender);
             setVal('inp-nationality', d.nationality);
-            setVal('inp-occupation', d.occupation);
+            setVal('inp-location', d.location);
             setVal('inp-location', d.location);
             setVal('inp-bio', d.selfIntroduction);
             setVal('inp-budget', d.budget);
@@ -554,15 +598,19 @@
             btn.disabled = true;
 
             try {
-                // Get values
+                // 現在の入力値を取得
+                const preferredAreas = currentProfileData.preferredAreas || []; 
+                // ※もし画面上でエリアを追加・削除できるUIがあるなら、その値をここで取得する必要があります。
+                // 今のUIではエリア編集機能が見当たらないため、既存データを使います。
+
                 const updatedData = {
                     ...currentProfileData,
                     displayName: getVal('inp-displayName'),
                     age: parseInt(getVal('inp-age')) || 18,
                     gender: getVal('inp-gender'),
                     nationality: getVal('inp-nationality'),
-                    occupation: getVal('inp-occupation'),
-                    location: getVal('inp-location'),
+                    // occupation: getVal('inp-occupation'), // 削除済みなら不要
+                    location: getVal('inp-location'), // 通勤先
                     selfIntroduction: getVal('inp-bio'),
                     budget: parseFloat(getVal('inp-budget')) || 0,
                     pax: parseInt(getVal('inp-pax')) || 1,
@@ -571,20 +619,47 @@
                     propertyType: getVal('inp-propType'),
                 };
 
-                // Handle Date
+                // --- ★ ここから追加: _geoloc (配列) の生成ロジック ★ ---
+                
+                // 1. ジオコーディング対象リストを作成 (希望エリア + 通勤先)
+                const areasToGeocode = [...preferredAreas];
+                const workLocation = getVal('inp-location');
+                if (workLocation) areasToGeocode.push(workLocation);
+
+                // 2. 重複と空文字を除去
+                const uniqueAreas = [...new Set(areasToGeocode.filter(a => a && a.trim() !== ""))];
+
+                if (uniqueAreas.length > 0) {
+                    // 3. 並列で座標変換を実行
+                    console.log("📍 Geocoding areas:", uniqueAreas);
+                    const coordPromises = uniqueAreas.map(area => getCoords(area));
+                    const coords = await Promise.all(coordPromises);
+
+                    // 4. 有効な座標だけを抽出して配列にする
+                    const geolocArray = coords.filter(c => c !== null);
+                    
+                    if (geolocArray.length > 0) {
+                        updatedData._geoloc = geolocArray; // [{lat:..., lng:...}, {lat:..., lng:...}]
+                        console.log("✅ New _geoloc array:", geolocArray);
+                    } else {
+                        updatedData._geoloc = null;
+                    }
+                } else {
+                    updatedData._geoloc = null;
+                }
+                // --- ★ 追加ここまで ★ ---
+
+
+                // Date処理 (既存のまま)
                 const dateStr = getVal('inp-movein');
                 if(dateStr) {
                     updatedData.moveinDate = new Date(dateStr);
                 }
 
-                // Handle Image (Stub - in real app upload to Storage here)
-                // For now we assume if the preview src changed to base64, we'd upload it.
-                // Keeping existing URL for this demo.
-
-                // Update Firestore
+                // Firestore 更新
                 await setDoc(doc(db, "users", currentUser.uid), updatedData, { merge: true });
                 
-                // Refresh View
+                // 画面更新
                 currentProfileData = updatedData;
                 renderProfile(updatedData);
                 closeEditModal();
@@ -597,7 +672,6 @@
                 btn.disabled = false;
             }
         };
-
         function getVal(id) { return document.getElementById(id).value; }
         function setVal(id, val) { 
             const el = document.getElementById(id);

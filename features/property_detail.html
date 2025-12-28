@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch.umd.js"></script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSrv_NciH-II4WVLSoAdWVXSAFxHpS9jU&libraries=places"></script>
+
     <style>
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -89,6 +92,22 @@
                 </div>
             </div>
 
+            <div id="commute-section" class="hidden bg-blue-50 rounded-2xl p-4 border border-blue-100 mb-6">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-blue-600 font-bold uppercase mb-1">Commute Time (Public Transport)</p>
+                        <h4 class="text-gray-900 font-bold flex items-center gap-2">
+                            <span id="commute-duration">Calculating...</span> 
+                            <span class="text-xs text-gray-500 font-normal">to your workplace</span>
+                        </h4>
+                        <p id="commute-dest" class="text-xs text-gray-500 mt-1 truncate max-w-[250px]"></p>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-2xl shadow-sm p-6">
                 <h3 class="font-bold text-lg mb-3">Description</h3>
                 <p id="d-description" class="text-gray-700 leading-relaxed whitespace-pre-line"></p>
@@ -148,6 +167,10 @@
         // Auth Check
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
+            // Reload property if we didn't have user info initially (to retry commute calc)
+            if (propertyData && currentUser) {
+                loadCommuteIfPossible();
+            }
         });
 
         // 1. WhatsApp Logic
@@ -157,9 +180,7 @@
                 return;
             }
             
-            // Basic cleaning of phone number
             let phone = agentProfile.phoneNumber.replace(/\D/g, ''); 
-            // Default to Malaysia '60' if missing country code (heuristic)
             if (!phone.startsWith('60') && !phone.startsWith('1')) {
                 phone = '60' + phone;
             }
@@ -172,7 +193,6 @@
         // 2. Chat Logic (Direct Chat)
         window.handleChat = async () => {
             if (!currentUser) {
-                // Redirect to Login if not signed in
                 if(confirm("You need to sign in to chat. Go to login?")) {
                     window.location.href = 'signin/sign_in.html';
                 }
@@ -186,24 +206,19 @@
 
             const otherUserId = propertyData.userId;
             
-            // Prevent chatting with self
             if (currentUser.uid === otherUserId) {
                 alert("This is your own property!");
                 return;
             }
 
-            // Generate Thread ID (Alphabetical Order)
-            // Matches Flutter Logic
             const uids = [currentUser.uid, otherUserId].sort();
             const threadId = uids.join('_');
 
-            // Initial Message / Thread Creation
             try {
                 const threadRef = doc(db, 'chats', threadId);
                 const threadSnap = await getDoc(threadRef);
 
                 if (!threadSnap.exists()) {
-                    // Create new thread if it doesn't exist
                     await setDoc(threadRef, {
                         participants: uids,
                         whoSent: currentUser.uid,
@@ -215,10 +230,6 @@
                     });
                 }
                 
-                // Redirect to Chat Page
-                // Note: Chat page shows list. Ideally, it should auto-open this thread.
-                // For MVP, redirecting to the chat list is the first step.
-                // You can enhance chat.html later to read ?threadId=XYZ from URL.
                 window.location.href = `chat/chat.html`;
 
             } catch (e) {
@@ -227,7 +238,55 @@
             }
         };
 
-        // Load Data
+        // --- Commute Logic ---
+        async function calculateCommute(originStr, destStr) {
+            if (!originStr || !destStr || typeof google === 'undefined') return;
+
+            const directionsService = new google.maps.DirectionsService();
+
+            const request = {
+                origin: originStr,
+                destination: destStr,
+                travelMode: google.maps.TravelMode.TRANSIT, // Use Public Transport
+                // travelMode: google.maps.TravelMode.DRIVING, // Switch to this for car
+                unitSystem: google.maps.UnitSystem.METRIC
+            };
+
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    const leg = result.routes[0].legs[0];
+                    const duration = leg.duration.text; // e.g., "45 mins"
+                    
+                    // Show UI
+                    document.getElementById('commute-section').classList.remove('hidden');
+                    document.getElementById('commute-duration').innerText = duration;
+                    document.getElementById('commute-dest').innerText = `To: ${destStr}`;
+                } else {
+                    console.warn('Commute calc failed or zero results:', status);
+                }
+            });
+        }
+
+        async function loadCommuteIfPossible() {
+            if (!propertyData || !currentUser) return;
+
+            // Fetch current user's profile to get 'location' (workplace)
+            try {
+                const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+                if (userSnap.exists()) {
+                    const userProfile = userSnap.data();
+                    
+                    // If user has a workplace address set
+                    if (userProfile.location && propertyData.location) {
+                        calculateCommute(propertyData.location, userProfile.location);
+                    }
+                }
+            } catch (e) {
+                console.error("Error fetching user profile for commute:", e);
+            }
+        }
+
+        // --- Load Property Data ---
         async function loadProperty() {
             const urlParams = new URLSearchParams(window.location.search);
             const propertyId = urlParams.get('id');
@@ -251,12 +310,16 @@
                     if (agentSnap.exists()) {
                         agentProfile = agentSnap.data();
                         
-                        // Update UI with Agent Info
                         document.getElementById('agent-name').innerText = agentProfile.displayName || "Agent";
                         if(agentProfile.profileImageUrl) {
                             document.getElementById('agent-avatar').src = agentProfile.profileImageUrl;
                         }
                     }
+                }
+
+                // Attempt to load commute time immediately if user is already loaded
+                if (currentUser) {
+                    loadCommuteIfPossible();
                 }
 
                 // Show Action Bar

@@ -154,7 +154,7 @@
                 currentUser = user;
                 initChatList();
             } else {
-                window.location.href = '../features/signin/sign_in.html';
+                window.location.href = '../signin/sign_in.html';
             }
         });
 
@@ -293,7 +293,7 @@
                             <div class="p-3">
                                 <h4 class="font-bold text-gray-800 text-sm truncate mb-1">${propData.name || 'Property'}</h4>
                                 <p class="text-xs text-gray-500 mb-2 truncate"><i class="fas fa-map-marker-alt mr-1"></i>${propData.location || 'Unknown'}</p>
-                                <a href="../features/property_detail.html?id=${propData.postId}" target="_blank" class="block text-center w-full py-1.5 bg-[#673ab7] hover:bg-[#5e35b1] text-white text-xs font-bold rounded transition">View Details</a>
+                                <a href="../property_detail.html?id=${propData.postId}" target="_blank" class="block text-center w-full py-1.5 bg-[#673ab7] hover:bg-[#5e35b1] text-white text-xs font-bold rounded transition">View Details</a>
                             </div>
                         </div>`;
                 } catch (e) { contentHtml = `<p class="text-red-500 text-xs italic">Error loading property</p>`; }
